@@ -1,0 +1,1 @@
+ALTER TABLE store ADD COLUMN sns_link VARCHAR(255);
