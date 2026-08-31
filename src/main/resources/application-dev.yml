@@ -1,9 +1,9 @@
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5433/habsidadb
-    username: postgres
-    password: root
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 
 jwt:
-  secret: dev-secret-key-for-local-testing-only-1234567890
+  secret: ${JWT_SECRET}
   expiration: 86400000
