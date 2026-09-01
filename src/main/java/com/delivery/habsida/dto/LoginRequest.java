@@ -2,15 +2,13 @@ package com.delivery.habsida.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
-public class LoginRequest {
+
+
+public record LoginRequest (
     @NotBlank(message = "Email should not be empty")
     @Email
-    private String email;
+     String email,
     @NotBlank(message = "Password should not be empty")
-    private String password;
-}
+     String password
+){}

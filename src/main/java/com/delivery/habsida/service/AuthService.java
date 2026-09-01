@@ -1,5 +1,6 @@
 package com.delivery.habsida.service;
 
+import com.delivery.habsida.dto.JwtResponse;
 import com.delivery.habsida.dto.LoginRequest;
 import com.delivery.habsida.entity.User;
 import com.delivery.habsida.exception.InvalidCredentialsException;
@@ -22,13 +23,14 @@ public class AuthService {
     }
 
 
-    public String login(LoginRequest loginRequest) {
-        User user = userRepository.findByEmail(loginRequest.getEmail())
+    public JwtResponse login(LoginRequest loginRequest) {
+        User user = userRepository.findByEmail(loginRequest.email())
                 .orElseThrow(() -> new InvalidCredentialsException("User not found"));
-        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
             throw new InvalidCredentialsException("Wrong password");
         }
-        return jwtService.generateToken(loginRequest.getEmail());
+        String token = jwtService.generateToken(loginRequest.email());
+        return new JwtResponse(token, "Bearer");
 
     }
 

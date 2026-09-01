@@ -1,5 +1,6 @@
 package com.delivery.habsida.controller;
 
+import com.delivery.habsida.dto.JwtResponse;
 import com.delivery.habsida.dto.LoginRequest;
 
 import com.delivery.habsida.service.AuthService;
@@ -17,7 +18,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public String login(@RequestBody @Valid LoginRequest loginRequest) {
+    public JwtResponse login(@RequestBody @Valid LoginRequest loginRequest) {
         return authService.login(loginRequest);
     }
 }
