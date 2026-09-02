@@ -3,3 +3,7 @@ spring:
     url: jdbc:postgresql://<>:5432/habsidadb
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000
