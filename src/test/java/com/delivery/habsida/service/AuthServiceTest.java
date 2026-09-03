@@ -2,9 +2,12 @@ package com.delivery.habsida.service;
 
 import com.delivery.habsida.dto.JwtResponse;
 import com.delivery.habsida.dto.LoginRequest;
+import com.delivery.habsida.entity.Role;
 import com.delivery.habsida.entity.User;
+import com.delivery.habsida.entity.UserRole;
 import com.delivery.habsida.exception.InvalidCredentialsException;
 import com.delivery.habsida.repository.UserRepository;
+import com.delivery.habsida.repository.UserRoleRepository;
 import com.delivery.habsida.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,6 +35,9 @@ class AuthServiceTest {
     @Mock
     private JwtService jwtService;
 
+    @Mock
+    private UserRoleRepository userRoleRepository;
+
     @InjectMocks
     private AuthService authService;
 
@@ -46,11 +53,20 @@ class AuthServiceTest {
    }
    @Test
     void login_shouldReturnJwtResponse_whenCredentialsAreValid() {
+
         when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("12345", "hashedPassword")).thenReturn(true);
-        when(jwtService.generateToken("test@test.com")).thenReturn("fakeToken");
+        when(jwtService.generateToken(eq("test@test.com"), anyList())).thenReturn("fakeToken");
 
-        JwtResponse response = authService.login(request);
+       Role role = new Role();
+       role.setName("ADMIN");
+
+       UserRole userRole = new UserRole();
+       userRole.setRole(role);
+
+       when(userRoleRepository.findByUser(user)).thenReturn(List.of(userRole));
+
+       JwtResponse response = authService.login(request);
 
         assertEquals("fakeToken", response.token());
         assertEquals("Bearer", response.tokenType());
