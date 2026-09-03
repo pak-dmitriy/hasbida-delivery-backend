@@ -48,6 +48,7 @@ class AuthServiceTest {
    void setUp() {
        request = new LoginRequest("test@test.com", "12345");
        user = new User();
+       user.setId(1L);
        user.setEmail("test@test.com");
        user.setPassword("hashedPassword");
    }
@@ -56,7 +57,7 @@ class AuthServiceTest {
 
         when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("12345", "hashedPassword")).thenReturn(true);
-        when(jwtService.generateToken(eq("test@test.com"), anyList())).thenReturn("fakeToken");
+        when(jwtService.generateToken(eq(1L),eq("test@test.com"), anyList())).thenReturn("fakeToken");
 
        Role role = new Role();
        role.setName("ADMIN");
