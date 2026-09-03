@@ -42,7 +42,7 @@ public class AuthService {
                 .map(userRole -> userRole.getRole().getName())
                 .toList();
 
-        String token = jwtService.generateToken(loginRequest.email(), roles);
+        String token = jwtService.generateToken(user.getId(), loginRequest.email(), roles);
         return new JwtResponse(token, "Bearer");
 
     }

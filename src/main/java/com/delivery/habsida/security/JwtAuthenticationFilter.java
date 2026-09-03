@@ -34,6 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             String email = jwtService.extractEmail(token);
+            Long userId = jwtService.extractUserId(token);
             List<String> roles = jwtService.extractRoles(token);
             if (email == null)
 
@@ -41,12 +42,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 throw new RuntimeException("Invalid token");
             }
 
+            UserPrincipal userPrincipal = new UserPrincipal(userId, email);
+
             List<GrantedAuthority> authorities = new ArrayList<>();
             for (String role : roles) {
                 authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
             }
             UsernamePasswordAuthenticationToken authToken =
-                    new UsernamePasswordAuthenticationToken(email, null,  authorities);
+                    new UsernamePasswordAuthenticationToken(userPrincipal, null,  authorities);
             SecurityContextHolder.getContext().setAuthentication(authToken);
             filterChain.doFilter(request, response);
         }  catch (Exception ex) {
@@ -54,5 +57,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
     }
-
 }

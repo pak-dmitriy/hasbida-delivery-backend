@@ -18,10 +18,11 @@ public class JwtService {
     @Value("${jwt.expiration}")
     private Long expiration;
 
-    public String generateToken(String email, List<String> roles) {
+    public String generateToken(Long userId, String email, List<String> roles) {
         SecretKey key = Keys.hmacShaKeyFor(secret.getBytes());
         return Jwts.builder()
                 .subject(email)
+                .claim("userId", userId)
                 .claim("roles",  roles)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
@@ -43,6 +44,14 @@ public class JwtService {
                 .verifyWith(key)
                 .build()
                 .parseSignedClaims(token).getPayload().get("roles", List.class);
+    }
+
+    public Long extractUserId(String token) {
+        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes());
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token).getPayload().get("userId", Long.class);
     }
 }
 
