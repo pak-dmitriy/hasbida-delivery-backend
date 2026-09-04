@@ -26,4 +26,10 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining(", "));
     }
 
+    @ExceptionHandler(StoreNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleStoreNotFoundException(StoreNotFoundException ex) {
+        return ex.getMessage();
+    }
+
 }
