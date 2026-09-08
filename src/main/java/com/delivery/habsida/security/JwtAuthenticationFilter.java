@@ -10,6 +10,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +24,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
             throws ServletException, IOException {
         String header = request.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
@@ -36,9 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String email = jwtService.extractEmail(token);
             Long userId = jwtService.extractUserId(token);
             List<String> roles = jwtService.extractRoles(token);
-            if (email == null)
-
-            {
+            if (email == null) {
                 throw new RuntimeException("Invalid token");
             }
 
@@ -49,12 +50,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
             }
             UsernamePasswordAuthenticationToken authToken =
-                    new UsernamePasswordAuthenticationToken(userPrincipal, null,  authorities);
+                    new UsernamePasswordAuthenticationToken(userPrincipal, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(authToken);
 
-        }  catch (Exception ex) {
-            return;
+        } catch (Exception ex) {
+            // Выводим в лог причину, почему токен не прошел валидацию
+            System.out.println("Ошибка валидации: " + ex.getMessage());
+            SecurityContextHolder.clearContext();
         }
+
+        // Цепочка фильтров должна продолжаться в любом случае!
         filterChain.doFilter(request, response);
     }
 }
