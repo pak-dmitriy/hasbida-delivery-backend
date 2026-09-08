@@ -33,6 +33,7 @@ public class GlobalExceptionHandler {
         return ex.getMessage();
     }
 
+
     @ExceptionHandler(EmployeeAlreadyAssignedException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public String handlerEmployeeAlreadyAssignedException(EmployeeAlreadyAssignedException ex) {return ex.getMessage();}
@@ -48,5 +49,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public String handlerDataIntegrityViolationException(DataIntegrityViolationException ex) {return "A record with this value already exists";}
+
+
+    @ExceptionHandler(CategoryNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handleCategoryNotFoundException(CategoryNotFoundException ex) {
+        return ex.getMessage();
+    }
 
 }
