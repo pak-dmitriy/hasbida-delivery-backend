@@ -5,6 +5,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.stream.Collectors;
 
@@ -31,5 +32,21 @@ public class GlobalExceptionHandler {
     public String handleStoreNotFoundException(StoreNotFoundException ex) {
         return ex.getMessage();
     }
+
+    @ExceptionHandler(EmployeeAlreadyAssignedException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public String handlerEmployeeAlreadyAssignedException(EmployeeAlreadyAssignedException ex) {return ex.getMessage();}
+
+    @ExceptionHandler(RoleNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handlerRoleNotFoundException(RoleNotFoundException ex) {return ex.getMessage();}
+
+    @ExceptionHandler(UserNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public String handlerUserNotFoundException(UserNotFoundException ex) {return ex.getMessage();}
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public String handlerDataIntegrityViolationException(DataIntegrityViolationException ex) {return "A record with this value already exists";}
 
 }
