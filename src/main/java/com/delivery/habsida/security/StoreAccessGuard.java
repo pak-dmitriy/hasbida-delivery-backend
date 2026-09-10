@@ -12,14 +12,17 @@ public class StoreAccessGuard {
         this.userStoreAccessRepository = userStoreAccessRepository;
     }
 
-    public boolean canAccessStore(Authentication authentication, Long storeId) {
-        boolean isAdmin = authentication.getAuthorities().stream()
+    public boolean isAdmin(Authentication authentication) {
+        return authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-        if (isAdmin) {
+    }
+
+    public boolean canAccessStore(Authentication authentication, Long storeId) {
+        if (isAdmin(authentication)) {
             return true;
         }
 
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-        return userStoreAccessRepository.existsByUserIdAndStoreId(userPrincipal.userId(),  storeId);
+        return userStoreAccessRepository.existsByUserIdAndStoreId(userPrincipal.userId(), storeId);
     }
 }
