@@ -1,11 +1,12 @@
 package com.delivery.habsida.entity;
 
 import jakarta.persistence.*;
+
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "products")
-public class Product extends BaseEntity{
+public class Product extends BaseEntity {
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -108,9 +109,15 @@ public class Product extends BaseEntity{
         return store;
     }
 
-    public void setStore(Store store) {this.store = store;}
+    public void setStore(Store store) {
+        this.store = store;
+    }
 
-    public Category getCategory(){ return category;}
+    public Category getCategory() {
+        return category;
+    }
 
-    public void setCategory(Category category) {this.category = category;}
+    public void setCategory(Category category) {
+        this.category = category;
+    }
 }
