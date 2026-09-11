@@ -1,5 +1,6 @@
 package com.delivery.habsida.dto;
 
+public class ProductDto {
 import com.delivery.habsida.entity.Category;
 import com.delivery.habsida.entity.Product;
 import com.delivery.habsida.entity.ProductStatus;

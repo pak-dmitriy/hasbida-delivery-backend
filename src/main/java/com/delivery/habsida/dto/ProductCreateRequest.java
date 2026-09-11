@@ -44,4 +44,5 @@ public record ProductCreateRequest (
 
 )
 {
+public class ProductCreateRequest {
 }
