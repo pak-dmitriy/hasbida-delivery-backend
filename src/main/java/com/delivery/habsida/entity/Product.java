@@ -22,15 +22,15 @@ public class Product extends BaseEntity{
     @Column(name = "low_stock_threshold", nullable = false)
     private int lowStockThreshold;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private ProductStatus status;
+
     @Column(name = "max_quantity", nullable = false)
     private int maxQuantity;
 
     @Column(name = "min_quantity", nullable = false)
     private int minQuantity;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private ProductStatus status;
 
     @ManyToOne
     @JoinColumn(name = "store_id")

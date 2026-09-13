@@ -59,9 +59,9 @@ class ProductServiceTest {
         product.setPrice(new BigDecimal("10.2"));
         product.setStock(50);
         product.setLowStockThreshold(10);
+        product.setStatus(ProductStatus.AVAILABLE);
         product.setMaxQuantity(100);
         product.setMinQuantity(5);
-        product.setStatus(ProductStatus.AVAILABLE);
         product.setStore(store);
         product.setCategory(category);
 
@@ -69,20 +69,17 @@ class ProductServiceTest {
         category.setId(1L);
         category.setStore(store);
         product.setId(1L);
-
     }
 
     @Test
     void getProducts_shouldReturnListOfProducts() {
-        when(productRepository.findByStoreIdAndStatus(1L,
-                ProductStatus.AVAILABLE)).thenReturn(List.of(product));
+        when(productRepository.findByStoreIdAndStatus(1L, ProductStatus.AVAILABLE)).thenReturn(List.of(product));
 
         List<ProductDto> productDTOList = productService.getProducts(1L,
                 null, ProductStatus.AVAILABLE);
 
         assertEquals(1, productDTOList.size());
         assertEquals("test", productDTOList.get(0).name());
-
     }
 
     @Test
@@ -121,9 +118,9 @@ class ProductServiceTest {
                 new BigDecimal("100.22"),
                 50,
                 10,
-                100,
-                5,
                 ProductStatus.AVAILABLE,
+                5,
+                100,
                 1L,
                 1L
         );
@@ -141,9 +138,9 @@ class ProductServiceTest {
                 new BigDecimal("100.22"),
                 50,
                 10,
-                100,
-                5,
                 ProductStatus.AVAILABLE,
+                5,
+                100,
                 1L,
                 1L
         );
@@ -161,9 +158,9 @@ class ProductServiceTest {
                 new BigDecimal("100.22"),
                 50,
                 10,
-                100,
-                5,
                 ProductStatus.AVAILABLE,
+                5,
+                100,
                 1L,
                 1L
         );
@@ -182,9 +179,9 @@ class ProductServiceTest {
                 new BigDecimal("100.22"),
                 50,
                 10,
-                100,
-                5,
                 ProductStatus.AVAILABLE,
+                5,
+                100,
                 99L,
                 1L
         );
@@ -206,9 +203,9 @@ class ProductServiceTest {
                 new BigDecimal("100.22"),
                 50,
                 10,
-                100,
-                5,
                 ProductStatus.AVAILABLE,
+                5,
+                100,
                 1L,
                 1L
         );
@@ -226,9 +223,9 @@ class ProductServiceTest {
                 new BigDecimal("100.22"),
                 50,
                 10,
-                100,
-                5,
                 ProductStatus.AVAILABLE,
+                5,
+                100,
                 1L,
                 1L
         );
@@ -248,9 +245,9 @@ class ProductServiceTest {
                 new BigDecimal("100.22"),
                 50,
                 10,
-                100,
-                5,
                 ProductStatus.AVAILABLE,
+                5,
+                100,
                 1L,
                 1L
         );
@@ -270,9 +267,9 @@ class ProductServiceTest {
                 new BigDecimal("100.22"),
                 50,
                 10,
-                100,
-                5,
                 ProductStatus.AVAILABLE,
+                5,
+                100,
                 1L,
                 1L
         );
@@ -297,9 +294,9 @@ class ProductServiceTest {
                 new BigDecimal("100.22"),
                 50,
                 10,
-                100,
-                5,
                 ProductStatus.AVAILABLE,
+                5,
+                100,
                 1L,
                 1L
         );

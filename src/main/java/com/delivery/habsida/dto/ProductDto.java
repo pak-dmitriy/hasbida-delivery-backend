@@ -15,9 +15,9 @@ public record ProductDto(
         BigDecimal price,
         int stock,
         int lowStockThreshold,
+        ProductStatus status,
         int maxQuantity,
         int minQuantity,
-        ProductStatus status,
         Long storeId,
         Long categoryId
 
@@ -30,9 +30,9 @@ public record ProductDto(
                 product.getPrice(),
                 product.getStock(),
                 product.getLowStockThreshold(),
+                product.getStatus(),
                 product.getMaxQuantity(),
                 product.getMinQuantity(),
-                product.getStatus(),
                 product.getStore().getId(),
                 product.getCategory().getId()
         );

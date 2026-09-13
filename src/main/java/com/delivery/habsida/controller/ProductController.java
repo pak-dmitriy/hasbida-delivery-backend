@@ -45,7 +45,7 @@ public class ProductController {
     @GetMapping("/stores/{storeId}/products/{productId}")
     public ProductDto getProduct(@PathVariable Long storeId,
                                  @PathVariable Long productId) {
-        return productService.getProduct(productId, storeId);
+        return productService.getProduct(storeId, productId);
     }
 
     @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")

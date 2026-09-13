@@ -13,7 +13,6 @@ import com.delivery.habsida.repository.CategoryRepository;
 import com.delivery.habsida.repository.ProductRepository;
 import com.delivery.habsida.repository.StoreRepository;
 import com.delivery.habsida.security.StoreAccessGuard;
-import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
@@ -49,9 +48,9 @@ public class ProductService {
         product.setPrice(request.price());
         product.setStock(request.stock());
         product.setLowStockThreshold(request.lowStockThreshold());
+        product.setStatus(request.status());
         product.setMaxQuantity(request.maxQuantity());
         product.setMinQuantity(request.minQuantity());
-        product.setStatus(request.status());
         product.setStore(store);
         product.setCategory(category);
 
@@ -75,9 +74,9 @@ public class ProductService {
     @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")
     public ProductDto getProduct( Long storeId, Long productId) {
 
-        Product product = productRepository.findById(productId)
+        Product product = productRepository.findById( productId) // Шаг 1
                 .orElseThrow(() -> new ProductNotFoundException("Product not found"));
-        if (!product.getStore().getId().equals(storeId)) {
+        if (!product.getStore().getId().equals(storeId)) {             // Шаг 2
             throw new ProductNotFoundException("Product not found");
         }
 
@@ -102,9 +101,9 @@ public class ProductService {
         product.setPrice(request.price());
         product.setStock(request.stock());
         product.setLowStockThreshold(request.lowStockThreshold());
+        product.setStatus(request.status());
         product.setMaxQuantity(request.maxQuantity());
         product.setMinQuantity(request.minQuantity());
-        product.setStatus(request.status());
         product.setCategory(category);
 
         return ProductDto.from(productRepository.save(product)); // Шаг 6
