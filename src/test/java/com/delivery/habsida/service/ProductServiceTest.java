@@ -324,4 +324,5 @@ class ProductServiceTest {
         assertThrows(ProductNotFoundException.class,
                 ()-> productService.deleteProduct(99L, 1L));
     }
+public class ProductServiceTest {
 }
