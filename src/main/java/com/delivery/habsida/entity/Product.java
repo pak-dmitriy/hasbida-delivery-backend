@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 @Table(name = "products")
 public class Product extends BaseEntity{
 
-    @Column(name = "name", nullable = false, unique = true)
+    @Column(name = "name", nullable = false)
     private String name;
 
     @Column(name = "description", nullable = false)
@@ -35,6 +35,10 @@ public class Product extends BaseEntity{
     @ManyToOne
     @JoinColumn(name = "store_id")
     private Store store;
+
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
 
     public String getName() {
         return name;
@@ -104,7 +108,9 @@ public class Product extends BaseEntity{
         return store;
     }
 
-    public void setStore(Store store) {
-        this.store = store;
-    }
+    public void setStore(Store store) {this.store = store;}
+
+    public Category getCategory(){ return category;}
+
+    public void setCategory(Category category) {this.category = category;}
 }

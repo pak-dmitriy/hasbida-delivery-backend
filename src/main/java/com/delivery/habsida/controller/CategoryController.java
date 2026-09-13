@@ -30,7 +30,8 @@ public class CategoryController {
     @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")
     @PostMapping("/stores/{storeId}/categories")
     public ResponseEntity<CategoryDTO> createCategory
-            (@PathVariable Long storeId, @RequestBody @Valid CategoryCreateRequest categoryCreateRequest) {
+            (@PathVariable Long storeId,
+             @RequestBody @Valid CategoryCreateRequest categoryCreateRequest) {
         CategoryDTO created = categoryService.createCategory(storeId, categoryCreateRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -38,15 +39,18 @@ public class CategoryController {
     @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")
     @PutMapping("/stores/{storeId}/categories/{categoryId}")
     public ResponseEntity<CategoryDTO> updateCategory
-            (@PathVariable Long storeId, @PathVariable Long categoryId, @RequestBody @Valid CategoryCreateRequest categoryCreateRequest) {
+            (@PathVariable Long storeId, @PathVariable Long categoryId,
+             @RequestBody @Valid CategoryCreateRequest categoryCreateRequest) {
         CategoryDTO update = categoryService.updateCategory(storeId, categoryId, categoryCreateRequest);
         return ResponseEntity.ok().body(update);
     }
 
     @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")
     @DeleteMapping("/stores/{storeId}/categories/{categoryId}")
-    public ResponseEntity<Void> deleteCategory(@PathVariable Long storeId, @PathVariable Long categoryId) {
+    public ResponseEntity<Void> deleteCategory(@PathVariable Long storeId,
+                                               @PathVariable Long categoryId) {
         categoryService.deleteCategory(storeId, categoryId);
         return ResponseEntity.noContent().build();
     }
+
 }
