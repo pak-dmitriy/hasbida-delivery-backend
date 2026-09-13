@@ -25,9 +25,6 @@ public record ProductCreateRequest (
         @Min(value = 0, message = "LowStockThreshold must be greater than zero")
         Integer lowStockThreshold,
 
-        @NotNull(message = "Status can not be empty")
-        ProductStatus status,
-
         @NotNull
         @Positive(message = "MaxQuantity must be greater than zero")
         Integer maxQuantity,
@@ -35,6 +32,9 @@ public record ProductCreateRequest (
         @NotNull
         @Positive(message = "MinQuantity must be greater than zero")
         Integer minQuantity,
+
+        @NotNull(message = "Status can not be empty")
+        ProductStatus status,
 
         @NotNull(message = "StoreId can not be empty")
         Long storeId,
@@ -44,5 +44,4 @@ public record ProductCreateRequest (
 
 )
 {
-public class ProductCreateRequest {
 }

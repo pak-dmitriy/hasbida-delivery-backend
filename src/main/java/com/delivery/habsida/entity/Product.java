@@ -1,12 +1,11 @@
 package com.delivery.habsida.entity;
 
 import jakarta.persistence.*;
-
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "products")
-public class Product extends BaseEntity {
+public class Product extends BaseEntity{
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -23,15 +22,15 @@ public class Product extends BaseEntity {
     @Column(name = "low_stock_threshold", nullable = false)
     private int lowStockThreshold;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private ProductStatus status;
-
     @Column(name = "max_quantity", nullable = false)
     private int maxQuantity;
 
     @Column(name = "min_quantity", nullable = false)
     private int minQuantity;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private ProductStatus status;
 
     @ManyToOne
     @JoinColumn(name = "store_id")
@@ -109,15 +108,9 @@ public class Product extends BaseEntity {
         return store;
     }
 
-    public void setStore(Store store) {
-        this.store = store;
-    }
+    public void setStore(Store store) {this.store = store;}
 
-    public Category getCategory() {
-        return category;
-    }
+    public Category getCategory(){ return category;}
 
-    public void setCategory(Category category) {
-        this.category = category;
-    }
+    public void setCategory(Category category) {this.category = category;}
 }
