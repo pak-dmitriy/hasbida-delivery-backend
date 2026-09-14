@@ -14,15 +14,6 @@ public class HabsidaApplication {
 		}
 	}
 
-//	@Bean
-//	CommandLineRunner initAdmin(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-//		return args -> {
-//			userRepository.findByEmail("artyom@artyom").ifPresent(user -> {
-//				user.setPassword(passwordEncoder.encode("123456"));
-//				userRepository.save(user);
-//			});
-//		};
-//	}
 
 
 

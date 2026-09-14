@@ -1,0 +1,40 @@
+package com.delivery.habsida.dto;
+
+import com.delivery.habsida.entity.Category;
+import com.delivery.habsida.entity.Product;
+import com.delivery.habsida.entity.ProductStatus;
+import com.delivery.habsida.entity.Store;
+import org.springframework.validation.beanvalidation.SpringValidatorAdapter;
+
+import java.math.BigDecimal;
+
+public record ProductDto(
+        Long id,
+        String name,
+        String description,
+        BigDecimal price,
+        int stock,
+        int lowStockThreshold,
+        ProductStatus status,
+        int maxQuantity,
+        int minQuantity,
+        Long storeId,
+        Long categoryId
+
+        ) {
+    public static ProductDto from(Product product) {
+        return new ProductDto(
+                product.getId(),
+                product.getName(),
+                product.getDescription(),
+                product.getPrice(),
+                product.getStock(),
+                product.getLowStockThreshold(),
+                product.getStatus(),
+                product.getMaxQuantity(),
+                product.getMinQuantity(),
+                product.getStore().getId(),
+                product.getCategory().getId()
+        );
+    }
+}

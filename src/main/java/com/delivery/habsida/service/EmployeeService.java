@@ -87,6 +87,7 @@ public class EmployeeService {
 
     @Transactional
     public void assignEmployeeToStore(Long userId, Long storeId) {
+
         //Проверяем есть ли сотрудник и магазин в базе
         User user = userRepository.findById(userId)
                 .orElseThrow(()-> new UserNotFoundException("User not found"));
