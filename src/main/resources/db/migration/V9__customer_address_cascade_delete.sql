@@ -1,0 +1,2 @@
+ALTER TABLE customer_address DROP CONSTRAINT customer_address_customer_id_fkey;
+ALTER TABLE customer_address ADD CONSTRAINT customer_address_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES customer(id) ON DELETE CASCADE;
