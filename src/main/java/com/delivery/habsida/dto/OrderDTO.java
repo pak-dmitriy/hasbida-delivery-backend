@@ -1,0 +1,45 @@
+package com.delivery.habsida.dto;
+
+import com.delivery.habsida.entity.Order;
+import com.delivery.habsida.entity.OrderStatus;
+import com.delivery.habsida.entity.OrderType;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+public record OrderDTO(
+        Long id,
+        Long storeId,
+        Long customerId,
+        Long customerAddressId,
+        OrderType orderType,
+        OrderStatus orderStatus,
+        String customerNote,
+        BigDecimal subtotal,
+        BigDecimal deliveryFee,
+        BigDecimal discountTotal,
+        BigDecimal total,
+        List<OrderItemDto> orderItems,
+        String orderNumber,
+        String currency
+) {
+
+    public static OrderDTO from(Order order, List<OrderItemDto> items) {
+        return new OrderDTO(
+                order.getId(),
+                order.getStore().getId(),
+                order.getCustomer().getId(),
+                order.getCustomerAddress().getId(),
+                order.getOrderType(),
+                order.getOrderStatus(),
+                order.getCustomerNote(),
+                order.getSubTotal(),
+                order.getDeliveryFee(),
+                order.getDiscountTotal(),
+                order.getTotal(),
+                items,
+                order.getOrderNumber(),
+                order.getCurrency()
+        );
+    }
+}
