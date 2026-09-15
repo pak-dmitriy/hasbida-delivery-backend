@@ -5,6 +5,7 @@ import com.delivery.habsida.dto.CustomerDTO;
 import com.delivery.habsida.dto.CustomerUpdateRequest;
 import com.delivery.habsida.entity.Customer;
 import com.delivery.habsida.entity.CustomerStatus;
+import com.delivery.habsida.exception.CustomerAlreadyExistsException;
 import com.delivery.habsida.exception.CustomerNotFoundException;
 import com.delivery.habsida.repository.CustomerRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,8 +50,16 @@ class CustomerServiceTest {
     void createCustomer() {
         CustomerCreateRequest request = new CustomerCreateRequest("John", "123456789");
         when(customerRepository.save(any(Customer.class))).thenReturn(customer);
+        when(customerRepository.findByPhone(customer.getPhone())).thenReturn(Optional.empty());
         CustomerDTO result = customerService.createCustomer(request);
         assertEquals("John", result.name());
+    }
+
+    @Test
+    void createCustomer_shouldThrowException_whenPhoneAlreadyExists() {
+        when(customerRepository.findByPhone(customer.getPhone())).thenReturn(Optional.of(customer));
+        CustomerCreateRequest request = new CustomerCreateRequest(customer.getName(), customer.getPhone());
+        assertThrows(CustomerAlreadyExistsException.class, () -> customerService.createCustomer(request));
     }
 
     @Test
@@ -67,9 +76,23 @@ class CustomerServiceTest {
     void updateCustomer() {
         when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
         when(customerRepository.save(any(Customer.class))).thenReturn(customer);
+        when(customerRepository.findByPhone("222222")).thenReturn(Optional.empty());
         CustomerUpdateRequest request = new CustomerUpdateRequest("Dima", "222222", CustomerStatus.BLOCKED);
         CustomerDTO updateCustomer = customerService.updateCustomer(1L, request);
         assertEquals("Dima", updateCustomer.name());
+    }
+
+    @Test
+    void updateCustomer_shouldThrowException_whenPhoneBelongsToDifferentCustomer() {
+        Customer otherCustomer = new Customer();
+        otherCustomer.setId(2L);
+        otherCustomer.setPhone("999999999");
+
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+        when(customerRepository.findByPhone("999999999")).thenReturn(Optional.of(otherCustomer));
+
+        CustomerUpdateRequest request = new CustomerUpdateRequest("Dima", "999999999", CustomerStatus.ACTIVE);
+        assertThrows(CustomerAlreadyExistsException.class, () -> customerService.updateCustomer(1L, request));
     }
 
     @Test
