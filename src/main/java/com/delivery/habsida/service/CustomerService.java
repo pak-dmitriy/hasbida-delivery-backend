@@ -7,6 +7,8 @@ import com.delivery.habsida.entity.Customer;
 import com.delivery.habsida.entity.CustomerStatus;
 import com.delivery.habsida.exception.CustomerNotFoundException;
 import com.delivery.habsida.repository.CustomerRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,8 +33,8 @@ public class CustomerService {
 
     }
 
-    public List<CustomerDTO> getAllCustomers() {
-        return customerRepository.findAll().stream().map(CustomerDTO::from).toList();
+    public Page<CustomerDTO> getAllCustomers(Pageable pageable) {
+        return customerRepository.findAll(pageable).map(CustomerDTO::from);
     }
 
     public CustomerDTO updateCustomer(Long customerId, CustomerUpdateRequest customerUpdateRequest) {

@@ -13,6 +13,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -51,10 +55,11 @@ class CustomerServiceTest {
 
     @Test
     void getAllCustomers() {
-        when(customerRepository.findAll()).thenReturn(List.of(customer));
-        List<CustomerDTO> result = customerService.getAllCustomers();
-        assertEquals(1, result.size());
-        assertEquals("John", result.get(0).name());
+        Pageable pageable = PageRequest.of(0, 10);
+        when(customerRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(customer)));
+        Page<CustomerDTO> result = customerService.getAllCustomers(pageable);
+        assertEquals(1, result.getContent().size());
+        assertEquals("John", result.getContent().get(0).name());
 
     }
 
