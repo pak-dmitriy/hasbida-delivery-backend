@@ -24,7 +24,10 @@ public class ProductService {
     private final StoreRepository storeRepository;
     private final CategoryRepository categoryRepository;
 
-    public ProductService(ProductRepository productRepository, StoreRepository storeRepository, CategoryRepository categoryRepository, StoreAccessGuard storeAccessGuard) {
+    public ProductService(ProductRepository productRepository,
+                          StoreRepository storeRepository,
+                          CategoryRepository categoryRepository,
+                          StoreAccessGuard storeAccessGuard) {
         this.productRepository = productRepository;
         this.storeRepository = storeRepository;
         this.categoryRepository = categoryRepository;
@@ -61,13 +64,22 @@ public class ProductService {
     public List<ProductDto> getProducts(Long storeId, Long categoryId, ProductStatus status) {
 
         if(categoryId != null && status != null) {
-            return productRepository.findByStoreIdAndCategoryIdAndStatus(storeId, categoryId, status).stream().map(ProductDto::from).toList();
+            return productRepository.findByStoreIdAndCategoryIdAndStatus(storeId, categoryId, status)
+                    .stream()
+                    .map(ProductDto::from)
+                    .toList();
+
         } else if(categoryId != null){
-            return productRepository.findByStoreIdAndCategoryId(storeId, categoryId).stream().map(ProductDto::from).toList();
+            return productRepository.findByStoreIdAndCategoryId(storeId, categoryId)
+                    .stream().map(ProductDto::from).toList();
+
         } else if(status != null) {
-            return productRepository.findByStoreIdAndStatus(storeId, status).stream().map(ProductDto::from).toList();
+            return productRepository.findByStoreIdAndStatus(storeId, status)
+                    .stream().map(ProductDto::from).toList();
         } else {
-            return productRepository.findByStoreId(storeId).stream().map(ProductDto::from).toList();
+            return productRepository.findByStoreId(storeId)
+                    .stream()
+                    .map(ProductDto::from).toList();
         }
     }
 
