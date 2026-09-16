@@ -1,11 +1,7 @@
 package com.delivery.habsida.dto;
 
-public class ProductDto {
-import com.delivery.habsida.entity.Category;
 import com.delivery.habsida.entity.Product;
 import com.delivery.habsida.entity.ProductStatus;
-import com.delivery.habsida.entity.Store;
-import org.springframework.validation.beanvalidation.SpringValidatorAdapter;
 
 import java.math.BigDecimal;
 

@@ -216,7 +216,7 @@ class ProductServiceTest {
                 ProductStatus.AVAILABLE,
                 5,
                 100,
-                99L
+                1L
         );
 
         assertThrows(CategoryNotFoundException.class,
@@ -352,5 +352,4 @@ class ProductServiceTest {
         assertThrows(ProductNotFoundException.class,
                 () -> productService.deleteProduct(99L, 1L));
     }
-public class ProductServiceTest {
 }
