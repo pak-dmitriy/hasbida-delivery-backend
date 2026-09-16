@@ -2,7 +2,6 @@ package com.delivery.habsida.exception;
 
 import com.delivery.habsida.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -114,70 +113,15 @@ public class GlobalExceptionHandler {
                request.getRequestURI()
        );
     }
+
+    @ExceptionHandler(ImageNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handlerImageNotFoundException(ImageNotFoundException ex, HttpServletRequest request) {
+        return new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                List.of(ex.getMessage()),
+                LocalDateTime.now(),
+                request.getRequestURI()
+        );
+    }
 }
-//    @ExceptionHandler(ProductNotFoundException.class)
-//    @ResponseStatus(HttpStatus.NOT_FOUND)
-//    public ErrorResponse(ProductNotFoundException ex, HttpServletRequest request){
-//       return new ErrorResponse(
-//               HttpStatus.NOT_FOUND.value(),
-//               List.of(ex.getMessage()),
-//               LocalDateTime.now(),
-//               request.getRequestURI()
-//       );
-    }
-
-    @ExceptionHandler(CategoryNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handlerCategoryNotFoundException(CategoryNotFoundException ex, HttpServletRequest request) {
-        return new ErrorResponse(
-                HttpStatus.NOT_FOUND.value(),
-                List.of(ex.getMessage()),
-                LocalDateTime.now(),
-                request.getRequestURI()
-        );
-    }
-
-    @ExceptionHandler(ProductNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handlerProductNotFoundException(ProductNotFoundException ex, HttpServletRequest request){
-       return new ErrorResponse(
-               HttpStatus.NOT_FOUND.value(),
-               List.of(ex.getMessage()),
-               LocalDateTime.now(),
-               request.getRequestURI()
-       );
-    }
-
-    @ExceptionHandler(CustomerNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handlerCustomerNotFoundException(CustomerNotFoundException ex, HttpServletRequest request) {
-        return new ErrorResponse(
-                HttpStatus.NOT_FOUND.value(),
-                List.of(ex.getMessage()),
-                LocalDateTime.now(),
-                request.getRequestURI()
-        );
-    }
-
-    @ExceptionHandler(CustomerAddressNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handlerCustomerAddressNotFoundException(CustomerAddressNotFoundException ex, HttpServletRequest request) {
-        return new ErrorResponse(
-                HttpStatus.NOT_FOUND.value(),
-                List.of(ex.getMessage()),
-                LocalDateTime.now(),
-                request.getRequestURI()
-        );
-    }
-
-    @ExceptionHandler(CustomerAlreadyExistsException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handlerCustomerAlreadyExistsException(CustomerAlreadyExistsException ex, HttpServletRequest request) {
-        return new ErrorResponse(
-                HttpStatus.CONFLICT.value(),
-                List.of(ex.getMessage()),
-                LocalDateTime.now(),
-                request.getRequestURI()
-        );
-    }
-//    }

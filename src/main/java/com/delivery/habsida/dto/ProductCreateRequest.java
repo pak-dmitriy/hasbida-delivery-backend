@@ -36,9 +36,6 @@ public record ProductCreateRequest (
         @Positive(message = "MinQuantity must be greater than zero")
         Integer minQuantity,
 
-        @NotNull(message = "StoreId can not be empty")
-        Long storeId,
-
         @NotNull(message = "CategoryId can not be empty")
         Long categoryId
 
