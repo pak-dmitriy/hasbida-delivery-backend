@@ -1,0 +1,2 @@
+ALTER TABLE store
+    ADD COLUMN last_order_number BIGINT NOT NULL DEFAULT 0;

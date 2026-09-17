@@ -1,8 +1,8 @@
 package com.delivery.habsida.exception;
 
 import com.delivery.habsida.dto.ErrorResponse;
+import com.delivery.habsida.entity.ProductStatus;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -85,13 +86,23 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handlerDataIntegrityViolationException(DataIntegrityViolationException ex, HttpServletRequest request) {
+        String message = "A record with this value already exists";
+
+        Throwable cause = ex.getMostSpecificCause();
+        if (cause instanceof SQLException sqlException) {
+            if ("23503".equals(sqlException.getSQLState())) {
+                message = "Cannot delete this record because other records depend on it";
+            }
+        }
+
         return new ErrorResponse(
                 HttpStatus.CONFLICT.value(),
-                List.of("A record with this value already exists"),
+                List.of(message),
                 LocalDateTime.now(),
                 request.getRequestURI()
         );
     }
+
 
     @ExceptionHandler(CategoryNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -140,6 +151,39 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CustomerAlreadyExistsException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handlerCustomerAlreadyExistsException(CustomerAlreadyExistsException ex, HttpServletRequest request) {
+        return new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                List.of(ex.getMessage()),
+                LocalDateTime.now(),
+                request.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler(ProductNotAvailableException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handlerProductNotAvailableException(ProductNotAvailableException ex, HttpServletRequest request) {
+        return new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                List.of(ex.getMessage()),
+                LocalDateTime.now(),
+                request.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler(InvalidQuantityException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handlerInvalidQuantityException(InvalidQuantityException ex, HttpServletRequest request) {
+        return new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                List.of(ex.getMessage()),
+                LocalDateTime.now(),
+                request.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler(InsufficientStockException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handlerInsufficientStockException(InsufficientStockException ex, HttpServletRequest request) {
         return new ErrorResponse(
                 HttpStatus.CONFLICT.value(),
                 List.of(ex.getMessage()),
