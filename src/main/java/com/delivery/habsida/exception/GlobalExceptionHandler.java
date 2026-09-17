@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -84,9 +85,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handlerDataIntegrityViolationException(DataIntegrityViolationException ex, HttpServletRequest request) {
+        String message = "A record with this value already exists";
+
+        Throwable cause = ex.getMostSpecificCause();
+        if (cause instanceof SQLException sqlException) {
+            if ("23503".equals(sqlException.getSQLState())) {
+                message = "Cannot delete this record because other records depend on it";
+            }
+        }
+
         return new ErrorResponse(
                 HttpStatus.CONFLICT.value(),
-                List.of("A record with this value already exists"),
+                List.of(message),
                 LocalDateTime.now(),
                 request.getRequestURI()
         );
