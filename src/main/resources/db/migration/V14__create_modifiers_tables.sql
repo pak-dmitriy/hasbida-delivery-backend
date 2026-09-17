@@ -25,7 +25,12 @@ CREATE TABLE product_modifier_groups
     id                BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     product_id        BIGINT     NOT NULL REFERENCES products (id),
     modifier_group_id BIGINT     NOT NULL REFERENCES modifier_groups (id),
+<<<<<<< HEAD
     created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+=======
+    created_at        TIMESTAMPZ NOT NULL DEFAULT NOW(),
+    updated_at        TIMESTAMPZ NOT NULL DEFAULT NOW()
+>>>>>>> f1e3d73 (Add ModifierGroup, ModifierOption, ProductModifierGroup entities and migration)
 
 );
