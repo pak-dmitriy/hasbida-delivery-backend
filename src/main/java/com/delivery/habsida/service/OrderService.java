@@ -2,12 +2,10 @@ package com.delivery.habsida.service;
 
 import com.delivery.habsida.dto.*;
 import com.delivery.habsida.entity.*;
-import com.delivery.habsida.exception.CustomerAddressNotFoundException;
-import com.delivery.habsida.exception.CustomerNotFoundException;
-import com.delivery.habsida.exception.ProductNotFoundException;
-import com.delivery.habsida.exception.StoreNotFoundException;
+import com.delivery.habsida.exception.*;
 import com.delivery.habsida.repository.*;
 import org.springframework.stereotype.Service;
+import jakarta.transaction.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -34,6 +32,7 @@ public class OrderService {
         this.orderItemRepository = orderItemRepository;
     }
 
+    @Transactional
     public OrderDTO createOrder(Long storeId, OrderCreateRequest orderCreateRequest) {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new StoreNotFoundException("Store not found"));
@@ -41,6 +40,9 @@ public class OrderService {
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
         CustomerAddress customerAddress = customerAddressRepository.findById(orderCreateRequest.customerAddressId())
                 .orElseThrow(() -> new CustomerAddressNotFoundException("Customer address not found"));
+        if (!customerAddress.getCustomer().getId().equals(customer.getId())) {
+            throw new CustomerAddressNotFoundException("Customer address not found");
+        }
         List<OrderItem> orderItems = new ArrayList<>();
 
         BigDecimal orderSubtotal = BigDecimal.ZERO;
@@ -48,6 +50,20 @@ public class OrderService {
         for (OrderItemRequest itemRequest : orderCreateRequest.items()) {
             Product product = productRepository.findById(itemRequest.productId())
                     .orElseThrow(() -> new ProductNotFoundException("Product not found"));
+            if (!product.getStore().getId().equals(storeId)) {
+                throw new ProductNotFoundException("Product not found");
+            }
+            if (product.getStatus() != ProductStatus.AVAILABLE) {
+                throw new ProductNotAvailableException("Product not available");
+            }
+            if (itemRequest.quantity() < product.getMinQuantity() || itemRequest.quantity() > product.getMaxQuantity()) {
+                throw new InvalidQuantityException("Quantity must be between: " + product.getMinQuantity() + " and " + product.getMaxQuantity());
+            }
+
+            List<Integer> stockResult = productRepository.decreaseStockAndGet(product.getId(), itemRequest.quantity());
+            if (stockResult.isEmpty()) {
+               throw new InsufficientStockException("Insufficient stock");
+            }
             OrderItem orderItem = new OrderItem();
             orderItem.setProductName(product.getName());
             orderItem.setProductPrice(product.getPrice());
@@ -72,7 +88,8 @@ public class OrderService {
         order.setDeliveryFee(deliveryFee);
         order.setDiscountTotal(discountTotal);
         order.setTotal(total);
-        order.setOrderNumber(String.valueOf(orderRepository.countByStoreId(storeId) + 1));
+        Long orderNumber = storeRepository.incrementAndGetOrderNumber(storeId).get(0);
+        order.setOrderNumber(String.valueOf(orderNumber));
         orderRepository.save(order);
 
         for (OrderItem item : orderItems) {
