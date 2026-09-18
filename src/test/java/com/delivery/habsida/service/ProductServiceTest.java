@@ -1,6 +1,5 @@
 package com.delivery.habsida.service;
 
-import com.delivery.habsida.dto.CategoryDTO;
 import com.delivery.habsida.dto.ProductCreateRequest;
 import com.delivery.habsida.dto.ProductDto;
 import com.delivery.habsida.entity.Category;
@@ -27,7 +26,8 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ProductServiceTest {
@@ -72,14 +72,51 @@ class ProductServiceTest {
     }
 
     @Test
-    void getProducts_shouldReturnListOfProducts() {
-        when(productRepository.findByStoreIdAndStatus(1L, ProductStatus.AVAILABLE)).thenReturn(List.of(product));
+    void getProducts_withBothFilters() {
+        when(productRepository.findByStoreIdAndCategoryIdAndStatus(1L,
+                1L,
+                ProductStatus.AVAILABLE))
+                .thenReturn(List.of(product));
 
-        List<ProductDto> productDTOList = productService.getProducts(1L,
+        List<ProductDto> productDtoList = productService.getProducts(1L, 1L, ProductStatus.AVAILABLE);
+
+        assertEquals(1, productDtoList.size());
+        assertEquals(1L, productDtoList.get(0).categoryId());
+        assertEquals(ProductStatus.AVAILABLE, productDtoList.get(0).status());
+    }
+
+    @Test
+    void getProducts_withCategoryFilter() {
+        when(productRepository.findByStoreIdAndCategoryId(1L, 1L)).thenReturn(List.of(product));
+
+        List<ProductDto> productDtoList = productService.getProducts(1L,
+                1L, null);
+
+        assertEquals(1, productDtoList.size());
+        assertEquals(1L, productDtoList.get(0).categoryId());
+    }
+
+    @Test
+    void getProducts_withStatusFilters() {
+        when(productRepository.findByStoreIdAndStatus(1L,
+                ProductStatus.AVAILABLE)).thenReturn(List.of(product));
+
+        List<ProductDto> productDtoList = productService.getProducts(1L,
                 null, ProductStatus.AVAILABLE);
 
-        assertEquals(1, productDTOList.size());
-        assertEquals("test", productDTOList.get(0).name());
+        assertEquals(1, productDtoList.size());
+        assertEquals("test", productDtoList.get(0).name());
+    }
+
+    @Test
+    void getProducts_withoutFilters() {
+        when(productRepository.findByStoreId(1L)).thenReturn(List.of(product));
+
+        List<ProductDto> productDtoList = productService.getProducts(1L,
+                null, null);
+
+        assertEquals(1, productDtoList.size());
+        assertEquals("test", productDtoList.get(0).name());
     }
 
     @Test
@@ -121,7 +158,6 @@ class ProductServiceTest {
                 ProductStatus.AVAILABLE,
                 5,
                 100,
-                1L,
                 1L
         );
 
@@ -141,7 +177,6 @@ class ProductServiceTest {
                 ProductStatus.AVAILABLE,
                 5,
                 100,
-                1L,
                 1L
         );
         assertThrows(StoreNotFoundException.class,
@@ -161,7 +196,6 @@ class ProductServiceTest {
                 ProductStatus.AVAILABLE,
                 5,
                 100,
-                1L,
                 1L
         );
         assertThrows(CategoryNotFoundException.class,
@@ -182,7 +216,6 @@ class ProductServiceTest {
                 ProductStatus.AVAILABLE,
                 5,
                 100,
-                99L,
                 1L
         );
 
@@ -206,7 +239,6 @@ class ProductServiceTest {
                 ProductStatus.AVAILABLE,
                 5,
                 100,
-                1L,
                 1L
         );
 
@@ -226,7 +258,6 @@ class ProductServiceTest {
                 ProductStatus.AVAILABLE,
                 5,
                 100,
-                1L,
                 1L
         );
 
@@ -248,7 +279,6 @@ class ProductServiceTest {
                 ProductStatus.AVAILABLE,
                 5,
                 100,
-                1L,
                 1L
         );
 
@@ -270,7 +300,6 @@ class ProductServiceTest {
                 ProductStatus.AVAILABLE,
                 5,
                 100,
-                1L,
                 1L
         );
 
@@ -297,7 +326,6 @@ class ProductServiceTest {
                 ProductStatus.AVAILABLE,
                 5,
                 100,
-                1L,
                 1L
         );
 
@@ -322,6 +350,6 @@ class ProductServiceTest {
     void deleteProduct_shouldThrowException_whenProductBelongsToDifferentStore() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         assertThrows(ProductNotFoundException.class,
-                ()-> productService.deleteProduct(99L, 1L));
+                () -> productService.deleteProduct(99L, 1L));
     }
 }

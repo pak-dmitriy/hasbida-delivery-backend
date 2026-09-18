@@ -15,21 +15,26 @@ import com.delivery.habsida.repository.StoreRepository;
 import com.delivery.habsida.security.StoreAccessGuard;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Transactional(readOnly = true)
 @Service
 public class ProductService {
     private final ProductRepository productRepository;
     private final StoreRepository storeRepository;
     private final CategoryRepository categoryRepository;
 
-    public ProductService(ProductRepository productRepository, StoreRepository storeRepository, CategoryRepository categoryRepository, StoreAccessGuard storeAccessGuard) {
+    public ProductService(ProductRepository productRepository,
+                          StoreRepository storeRepository,
+                          CategoryRepository categoryRepository) {
         this.productRepository = productRepository;
         this.storeRepository = storeRepository;
         this.categoryRepository = categoryRepository;
     }
 
+    @Transactional
     @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")
     public ProductDto createProduct(Long storeId, ProductCreateRequest request) {
 
@@ -57,46 +62,51 @@ public class ProductService {
         return ProductDto.from(productRepository.save(product));
     }
 
+
     @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")
     public List<ProductDto> getProducts(Long storeId, Long categoryId, ProductStatus status) {
 
-        if(categoryId != null && status != null) {
-            return productRepository.findByStoreIdAndCategoryIdAndStatus(storeId, categoryId, status).stream().map(ProductDto::from).toList();
-        } else if(categoryId != null){
-            return productRepository.findByStoreIdAndCategoryId(storeId, categoryId).stream().map(ProductDto::from).toList();
-        } else if(status != null) {
-            return productRepository.findByStoreIdAndStatus(storeId, status).stream().map(ProductDto::from).toList();
+        if (categoryId != null && status != null) {
+            return productRepository.findByStoreIdAndCategoryIdAndStatus(storeId, categoryId, status)
+                    .stream()
+                    .map(ProductDto::from)
+                    .toList();
+
+        } else if (categoryId != null) {
+            return productRepository.findByStoreIdAndCategoryId(storeId, categoryId)
+                    .stream().map(ProductDto::from).toList();
+
+        } else if (status != null) {
+            return productRepository.findByStoreIdAndStatus(storeId, status)
+                    .stream().map(ProductDto::from).toList();
         } else {
-            return productRepository.findByStoreId(storeId).stream().map(ProductDto::from).toList();
+            return productRepository.findByStoreId(storeId)
+                    .stream()
+                    .map(ProductDto::from).toList();
         }
     }
 
-    @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")
-    public ProductDto getProduct( Long storeId, Long productId) {
 
-        Product product = productRepository.findById( productId) // Шаг 1
-                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
-        if (!product.getStore().getId().equals(storeId)) {             // Шаг 2
-            throw new ProductNotFoundException("Product not found");
-        }
+    @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")
+    public ProductDto getProduct(Long storeId, Long productId) {
+
+        Product product = getProductOrThrow(storeId, productId);
 
         return ProductDto.from(product);
     }
 
+    @Transactional
     @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")
     public ProductDto updateProduct(Long storeId, Long productId, ProductCreateRequest request) {
 
-        Product product = productRepository.findById(productId)   // Шаг 1
-                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
-        if (!product.getStore().getId().equals(storeId)) {            // Шаг 2
-            throw new ProductNotFoundException("Product not found");
-        }
-        Category category = categoryRepository.findById(request.categoryId())  // Шаг 3
+        Product product = getProductOrThrow(storeId, productId);
+
+        Category category = categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> new CategoryNotFoundException("Category not found"));
-        if (!category.getStore().getId().equals(storeId)) {             // Шаг 4
+        if (!category.getStore().getId().equals(storeId)) {
             throw new CategoryNotFoundException("Category not found");
         }
-        product.setName(request.name());                                // Шаг 5
+        product.setName(request.name());
         product.setDescription(request.description());
         product.setPrice(request.price());
         product.setStock(request.stock());
@@ -106,20 +116,27 @@ public class ProductService {
         product.setMinQuantity(request.minQuantity());
         product.setCategory(category);
 
-        return ProductDto.from(productRepository.save(product)); // Шаг 6
+        return ProductDto.from(productRepository.save(product));
     }
 
+    @Transactional
     @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")
-    public void deleteProduct( Long storeId, Long productId) {
-        Product product = productRepository.findById(productId) // Шаг 1
-                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
-        if (!product.getStore().getId().equals(storeId)) {          // Шаг 2
-            throw new ProductNotFoundException("Product not found");
-        }
+    public void deleteProduct(Long storeId, Long productId) {
+
+        Product product = getProductOrThrow(storeId, productId);
 
         productRepository.delete(product);
     }
 
+    private Product getProductOrThrow(Long storeId, Long productId) {
 
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
+        if (!product.getStore().getId().equals(storeId)) {
+            throw new ProductNotFoundException("Product not found");
+        }
+        return product;
+    }
 }
+
 

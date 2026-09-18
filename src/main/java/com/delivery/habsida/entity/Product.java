@@ -2,6 +2,7 @@ package com.delivery.habsida.entity;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Entity
 @Table(name = "products")
@@ -39,6 +40,9 @@ public class Product extends BaseEntity{
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
+
+    @OneToMany(mappedBy = "product")
+    private List<ProductImage> images;
 
     public String getName() {
         return name;
@@ -113,4 +117,7 @@ public class Product extends BaseEntity{
     public Category getCategory(){ return category;}
 
     public void setCategory(Category category) {this.category = category;}
+
+    public List<ProductImage> getImages() {return images;}
+    public void setImages(List<ProductImage> images) {this.images = images;}
 }

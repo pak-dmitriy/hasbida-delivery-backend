@@ -1,8 +1,8 @@
 package com.delivery.habsida.exception;
 
 import com.delivery.habsida.dto.ErrorResponse;
-import com.delivery.habsida.entity.ProductStatus;
 import jakarta.servlet.http.HttpServletRequest;
+import org.hibernate.tool.schema.spi.SqlScriptException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -44,9 +44,9 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleStoreNotFoundException(StoreNotFoundException ex, HttpServletRequest request) {
         return new ErrorResponse(
                 HttpStatus.NOT_FOUND.value(),
-        List.of(ex.getMessage()),
-        LocalDateTime.now(),
-        request.getRequestURI()
+                List.of(ex.getMessage()),
+                LocalDateTime.now(),
+                request.getRequestURI()
         );
     }
 
@@ -117,13 +117,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ProductNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handlerProductNotFoundException(ProductNotFoundException ex, HttpServletRequest request){
-       return new ErrorResponse(
-               HttpStatus.NOT_FOUND.value(),
-               List.of(ex.getMessage()),
-               LocalDateTime.now(),
-               request.getRequestURI()
-       );
+    public ErrorResponse handlerProductNotFoundException(ProductNotFoundException ex, HttpServletRequest request) {
+        return new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                List.of(ex.getMessage()),
+                LocalDateTime.now(),
+                request.getRequestURI()
+        );
     }
 
     @ExceptionHandler(CustomerNotFoundException.class)
@@ -191,4 +191,17 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
     }
+
+    @ExceptionHandler(ImageNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handlerImageNotFoundException(ImageNotFoundException ex, HttpServletRequest request) {
+        return new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                List.of(ex.getMessage()),
+                LocalDateTime.now(),
+                request.getRequestURI()
+        );
+    }
+
 }
+
