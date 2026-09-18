@@ -21,7 +21,6 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")
     @PostMapping("/stores/{storeId}/products")
     public ResponseEntity<ProductDto> createProduct(@PathVariable Long storeId,
                                                     @RequestBody @Valid ProductCreateRequest request) {
@@ -31,7 +30,6 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);  // Step 2
     }
 
-    @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")
     @GetMapping("/stores/{storeId}/products")
     public List<ProductDto> getProducts(@PathVariable Long storeId,
                                         @RequestParam(required = false) Long categoryId,
@@ -40,7 +38,6 @@ public class ProductController {
         return productService.getProducts(storeId, categoryId, status);
     }
 
-    @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")
     @GetMapping("/stores/{storeId}/products/{productId}")
     public ProductDto getProduct(@PathVariable Long storeId,
                                  @PathVariable Long productId) {
@@ -48,7 +45,6 @@ public class ProductController {
         return productService.getProduct(storeId, productId);
     }
 
-    @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")
     @PutMapping("/stores/{storeId}/products/{productId}")
     public ResponseEntity<ProductDto> updateProduct(@PathVariable Long storeId,
                                                     @PathVariable Long productId,
@@ -57,7 +53,6 @@ public class ProductController {
         return ResponseEntity.ok().body(updatedProduct);
     }
 
-    @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")
     @DeleteMapping("/stores/{storeId}/products/{productId}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long storeId,
                                               @PathVariable Long productId) {

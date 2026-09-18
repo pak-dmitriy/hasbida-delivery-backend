@@ -1,13 +1,13 @@
 package com.delivery.habsida.service;
 
-import com.delivery.habsida.dto.ProductImagesDto;
-import com.delivery.habsida.dto.ProductImagesRequest;
+import com.delivery.habsida.dto.ProductImageDto;
+import com.delivery.habsida.dto.ProductImageRequest;
 import com.delivery.habsida.entity.Product;
-import com.delivery.habsida.entity.ProductImages;
+import com.delivery.habsida.entity.ProductImage;
 import com.delivery.habsida.entity.Store;
 import com.delivery.habsida.exception.ImageNotFoundException;
 import com.delivery.habsida.exception.ProductNotFoundException;
-import com.delivery.habsida.repository.ProductImagesRepository;
+import com.delivery.habsida.repository.ProductImageRepository;
 import com.delivery.habsida.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,50 +26,50 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class ProductImagesServiceTest {
+class ProductImageServiceTest {
     @Mock
     private ProductRepository productRepository;
 
     @Mock
-    private ProductImagesRepository productImagesRepository;
+    private ProductImageRepository productImageRepository;
 
     @InjectMocks
-    private ProductImagesService productImagesService;
+    private ProductImageService productImageService;
 
     private Store store;
     private Product product;
-    private ProductImages productImages;
+    private ProductImage productImage;
 
     @BeforeEach
     void setUp() {
 
         store = new Store();
         product = new Product();
-        productImages = new ProductImages();
+        productImage = new ProductImage();
 
         store.setId(1L);
         product.setId(1L);
         product.setStore(store);
 
-        productImages.setProduct(product);
-        productImages.setImagePhoto("apple.png");
-        productImages.setSortOrder(5);
-        productImages.setId(1L);
+        productImage.setProduct(product);
+        productImage.setImagePhoto("apple.png");
+        productImage.setSortOrder(5);
+        productImage.setId(1L);
 
     }
 
     @Test
     void createProductImages_shouldCreateProductImages() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        when(productImagesRepository.save(any(ProductImages.class))).thenReturn(productImages);
+        when(productImageRepository.save(any(ProductImage.class))).thenReturn(productImage);
 
-        ProductImagesRequest request = new ProductImagesRequest(
+        ProductImageRequest request = new ProductImageRequest(
 
                 "imagePhoto",
                 11
         );
 
-        ProductImagesDto result = productImagesService.createImages(1L, 1L, request);
+        ProductImageDto result = productImageService.createImages(1L, 1L, request);
         assertEquals("apple.png", result.imagePhoto());
         assertEquals(5, result.sortOrder());
 
@@ -79,14 +79,14 @@ class ProductImagesServiceTest {
     void createProductImages_shouldThrowException_whenProductNotFound() {
         when(productRepository.findById(1L)).thenReturn(Optional.empty());
 
-        ProductImagesRequest request = new ProductImagesRequest(
+        ProductImageRequest request = new ProductImageRequest(
 
                 "imagePhoto",
                 11
         );
 
         assertThrows(ProductNotFoundException.class,
-                () -> productImagesService.createImages(1L, 1L, request));
+                () -> productImageService.createImages(1L, 1L, request));
 
     }
 
@@ -94,23 +94,23 @@ class ProductImagesServiceTest {
     void createProductImages_shouldThrowException_whenProductBelongsToDifferentStore() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
-        ProductImagesRequest request = new ProductImagesRequest(
+        ProductImageRequest request = new ProductImageRequest(
 
                 "imagePhoto",
                 11
         );
 
         assertThrows(ProductNotFoundException.class,
-                () -> productImagesService.createImages(99L, 1L, request));
+                () -> productImageService.createImages(99L, 1L, request));
     }
 
     @Test
     void getProductImages_shouldReturnListOfImages() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        when(productImagesRepository.findByProductId(1L))
-                .thenReturn(List.of(productImages));
+        when(productImageRepository.findByProductIdOrderBySortOrderAsc(1L))
+                .thenReturn(List.of(productImage));
 
-        List<ProductImagesDto> list = productImagesService.getProductImages(1L, 1L);
+        List<ProductImageDto> list = productImageService.getProductImages(1L, 1L);
 
         assertEquals(1, list.size());
         assertEquals("apple.png", list.get(0).imagePhoto());
@@ -121,7 +121,7 @@ class ProductImagesServiceTest {
 
         when(productRepository.findById(1L)).thenReturn(Optional.empty());
         assertThrows(ProductNotFoundException.class,
-                () -> productImagesService.getProductImages(1L, 1L));
+                () -> productImageService.getProductImages(1L, 1L));
 
     }
 
@@ -129,49 +129,49 @@ class ProductImagesServiceTest {
     void getProductImages_shouldThrowException_whenProductBelongsToDifferentStore() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         assertThrows(ProductNotFoundException.class,
-                () -> productImagesService.getProductImages(99L, 1L));
+                () -> productImageService.getProductImages(99L, 1L));
     }
 
     @Test
     void deleteProductImages_shouldDeleteProductImages() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        when(productImagesRepository.findById(1L)).thenReturn(Optional.of(productImages));
-        productImagesService.deleteProductImages(1L, 1L, 1L);
-        verify(productImagesRepository).delete(productImages);
+        when(productImageRepository.findById(1L)).thenReturn(Optional.of(productImage));
+        productImageService.deleteProductImages(1L, 1L, 1L);
+        verify(productImageRepository).delete(productImage);
     }
 
     @Test
     void deleteProductImages_shouldThrowException_whenProductNotFound() {
         when(productRepository.findById(1L)).thenReturn(Optional.empty());
         assertThrows(ProductNotFoundException.class,
-                () -> productImagesService.deleteProductImages(1L, 1L, 1L));
+                () -> productImageService.deleteProductImages(1L, 1L, 1L));
     }
 
     @Test
     void deleteProductImages_shouldThrowException_whenProductBelongsToDifferentStore() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         assertThrows(ProductNotFoundException.class,
-                () -> productImagesService.deleteProductImages(99L, 1L, 1L));
+                () -> productImageService.deleteProductImages(99L, 1L, 1L));
     }
 
     @Test
     void deleteProductImages_shouldThrowException_whenProductImagesNotFound() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        when(productImagesRepository.findById(1L)).thenReturn(Optional.empty());
+        when(productImageRepository.findById(1L)).thenReturn(Optional.empty());
         assertThrows(ImageNotFoundException.class,
-                () -> productImagesService.deleteProductImages(1L, 1L, 1L));
+                () -> productImageService.deleteProductImages(1L, 1L, 1L));
     }
 
     @Test
     void deleteProductImages_shouldThrowException_whenImagesBelongsToDifferentProduct() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        when(productImagesRepository.findById(1L)).thenReturn(Optional.of(productImages));
+        when(productImageRepository.findById(1L)).thenReturn(Optional.of(productImage));
 
         Product otherProduct = new Product();
         otherProduct.setId(2L);
-        productImages.setProduct(otherProduct);
+        productImage.setProduct(otherProduct);
 
         assertThrows(ImageNotFoundException.class,
-                () -> productImagesService.deleteProductImages(1L, 1L, 1L));
+                () -> productImageService.deleteProductImages(1L, 1L, 1L));
     }
 }

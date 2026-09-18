@@ -42,7 +42,7 @@ public class Product extends BaseEntity{
     private Category category;
 
     @OneToMany(mappedBy = "product")
-    private List<ProductImages> images;
+    private List<ProductImage> images;
 
     public String getName() {
         return name;
@@ -118,6 +118,6 @@ public class Product extends BaseEntity{
 
     public void setCategory(Category category) {this.category = category;}
 
-    public List<ProductImages> getImages() {return images;}
-    public void setImages(List<ProductImages> images) {this.images = images;}
+    public List<ProductImage> getImages() {return images;}
+    public void setImages(List<ProductImage> images) {this.images = images;}
 }

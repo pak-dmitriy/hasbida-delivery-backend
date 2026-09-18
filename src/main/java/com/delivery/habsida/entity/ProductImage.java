@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "product_images")
-public class ProductImages extends BaseEntity {
+public class ProductImage extends BaseEntity {
 
     @Column(name = "image_photo", nullable = false)
     private String imagePhoto;

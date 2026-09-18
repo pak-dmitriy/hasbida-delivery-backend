@@ -1,8 +1,8 @@
 package com.delivery.habsida.controller;
 
-import com.delivery.habsida.dto.ProductImagesDto;
-import com.delivery.habsida.dto.ProductImagesRequest;
-import com.delivery.habsida.service.ProductImagesService;
+import com.delivery.habsida.dto.ProductImageDto;
+import com.delivery.habsida.dto.ProductImageRequest;
+import com.delivery.habsida.service.ProductImageService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,38 +14,35 @@ import java.util.List;
 @RestController
 public class ProductImageController {
 
-    private final ProductImagesService productImagesService;
+    private final ProductImageService productImageService;
 
-    public ProductImageController(ProductImagesService productImagesService) {
-        this.productImagesService = productImagesService;
+    public ProductImageController(ProductImageService productImageService) {
+        this.productImageService = productImageService;
     }
 
-    @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")
     @PostMapping("/stores/{storeId}/products/{productId}/images")
-    public ResponseEntity<ProductImagesDto> createProductImage(@PathVariable Long storeId,
-                                                               @PathVariable Long productId,
-                                                               @RequestBody @Valid ProductImagesRequest request) {
+    public ResponseEntity<ProductImageDto> createProductImage(@PathVariable Long storeId,
+                                                              @PathVariable Long productId,
+                                                              @RequestBody @Valid ProductImageRequest request) {
 
-        ProductImagesDto created = productImagesService.createImages(storeId, productId, request);
+        ProductImageDto created = productImageService.createImages(storeId, productId, request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")
     @GetMapping("/stores/{storeId}/products/{productId}/images")
-    public List<ProductImagesDto> getProductImages(@PathVariable Long storeId,
-                                                   @PathVariable Long productId) {
+    public List<ProductImageDto> getProductImages(@PathVariable Long storeId,
+                                                  @PathVariable Long productId) {
 
-        return productImagesService.getProductImages(storeId, productId);
+        return productImageService.getProductImages(storeId, productId);
     }
 
-    @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")
     @DeleteMapping("/stores/{storeId}/products/{productId}/images/{imageId}")
     public ResponseEntity<Void> deleteProductImages(@PathVariable Long storeId,
                                                     @PathVariable Long productId,
                                                     @PathVariable Long imageId) {
 
-        productImagesService.deleteProductImages(storeId, productId, imageId);
+        productImageService.deleteProductImages(storeId, productId, imageId);
 
         return ResponseEntity.noContent().build();
     }

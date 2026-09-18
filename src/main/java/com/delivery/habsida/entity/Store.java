@@ -35,6 +35,9 @@ public class Store extends BaseEntity {
     @Column(name = "sns_link")
     private String snsLink;
 
+    @Column(name = "last_order_number")
+    private Long lastOrderNumber;
+
     public String getName() {
         return name;
     }
@@ -105,5 +108,13 @@ public class Store extends BaseEntity {
 
     public void setSnsLink(String snsLink) {
         this.snsLink = snsLink;
+    }
+
+    public Long getLastOrderNumber() {
+        return lastOrderNumber;
+    }
+
+    public void setLastOrderNumber(Long lastOrderNumber) {
+        this.lastOrderNumber = lastOrderNumber;
     }
 }

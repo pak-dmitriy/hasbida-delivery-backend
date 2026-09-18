@@ -1,9 +1,9 @@
 package com.delivery.habsida.controller;
 
-import com.delivery.habsida.dto.ProductImagesDto;
-import com.delivery.habsida.dto.ProductImagesRequest;
+import com.delivery.habsida.dto.ProductImageDto;
+import com.delivery.habsida.dto.ProductImageRequest;
 import com.delivery.habsida.security.StoreAccessGuard;
-import com.delivery.habsida.service.ProductImagesService;
+import com.delivery.habsida.service.ProductImageService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +32,7 @@ class ProductImageControllerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @MockitoBean
-    private ProductImagesService productImagesService;
+    private ProductImageService productImageService;
 
     @MockitoBean
     private StoreAccessGuard storeAccessGuard;
@@ -45,13 +45,13 @@ class ProductImageControllerTest {
                 any(),
                 anyLong())).thenReturn(true);
 
-        ProductImagesDto dto = new ProductImagesDto(1L, "imagePhoto", 5);
+        ProductImageDto dto = new ProductImageDto(1L, "imagePhoto", 5);
 
-        when(productImagesService.createImages(anyLong(),
+        when(productImageService.createImages(anyLong(),
                 anyLong(),
                 any())).thenReturn(dto);
 
-        ProductImagesRequest request = new ProductImagesRequest(
+        ProductImageRequest request = new ProductImageRequest(
                 "imagePhoto",
                 5
         );
@@ -69,7 +69,7 @@ class ProductImageControllerTest {
                 any(),
                 anyLong())).thenReturn(true);
 
-        ProductImagesRequest invalidRequest = new ProductImagesRequest(" ", 5);
+        ProductImageRequest invalidRequest = new ProductImageRequest(" ", 5);
 
         mockMvc.perform(post("/stores/{storeId}/products/{productId}/images", 1L, 1L)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -82,7 +82,7 @@ class ProductImageControllerTest {
     void createProductImage_shouldReturn400_whenSortOrderIsBlank() throws Exception {
         when(storeAccessGuard.canAccessStore(any(), anyLong())).thenReturn(true);
 
-        ProductImagesRequest invalidRequest = new ProductImagesRequest(
+        ProductImageRequest invalidRequest = new ProductImageRequest(
                 "imagePhoto",
                 -5
         );
@@ -98,12 +98,12 @@ class ProductImageControllerTest {
     void getProductImages_shouldReturnListOfProductImages() throws Exception {
 
         when(storeAccessGuard.canAccessStore(any(), anyLong())).thenReturn(true);
-        ProductImagesDto dto = new ProductImagesDto(
+        ProductImageDto dto = new ProductImageDto(
                 1L,
                 "imagePhoto",
                 5
         );
-        when(productImagesService.getProductImages(
+        when(productImageService.getProductImages(
                 anyLong(),
                 anyLong())).thenReturn(List.of(dto));
 
