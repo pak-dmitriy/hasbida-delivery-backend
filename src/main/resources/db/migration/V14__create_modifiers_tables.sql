@@ -27,8 +27,5 @@ CREATE TABLE product_modifier_groups
     modifier_group_id BIGINT     NOT NULL REFERENCES modifier_groups (id),
 
     created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
