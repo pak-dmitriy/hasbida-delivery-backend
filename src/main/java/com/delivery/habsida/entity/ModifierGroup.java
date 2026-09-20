@@ -26,6 +26,9 @@ public class ModifierGroup extends BaseEntity {
     @OneToMany(mappedBy = "modifierGroup")
     private List<ModifierOption> modifierOptions;
 
+    @ManyToOne
+    @JoinColumn(name = "store_id", nullable = false)
+    private Store store;
 
     public String getName() {
         return name;
@@ -74,4 +77,8 @@ public class ModifierGroup extends BaseEntity {
     public void setModifierOption(List<ModifierOption> modifierOptions) {
         this.modifierOptions = modifierOptions;
     }
+
+    public Store getStore() {return store;}
+
+    public void setStore(Store store) {this.store = store;}
 }
