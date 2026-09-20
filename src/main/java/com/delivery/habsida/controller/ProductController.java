@@ -7,7 +7,6 @@ import com.delivery.habsida.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,9 +24,9 @@ public class ProductController {
     public ResponseEntity<ProductDto> createProduct(@PathVariable Long storeId,
                                                     @RequestBody @Valid ProductCreateRequest request) {
 
-        ProductDto created = productService.createProduct(storeId, request); // Step 1
+        ProductDto created = productService.createProduct(storeId, request);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);  // Step 2
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @GetMapping("/stores/{storeId}/products")
