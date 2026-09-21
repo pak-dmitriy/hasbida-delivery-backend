@@ -65,6 +65,7 @@ public class OrderService {
                throw new InsufficientStockException("Insufficient stock");
             }
             OrderItem orderItem = new OrderItem();
+            orderItem.setProduct(product);
             orderItem.setProductName(product.getName());
             orderItem.setProductPrice(product.getPrice());
             orderItem.setQuantity(itemRequest.quantity());
@@ -81,6 +82,10 @@ public class OrderService {
         order.setStore(store);
         order.setCustomer(customer);
         order.setCustomerAddress(customerAddress);
+        order.setDeliveryCity(customerAddress.getCity());
+        order.setDeliveryStreet(customerAddress.getStreet());
+        order.setDeliveryHouse(customerAddress.getHouse());
+        order.setDeliveryApartment(customerAddress.getApartment());
         order.setOrderType(orderCreateRequest.type());
         order.setCustomerNote(orderCreateRequest.customerNote());
         order.setOrderStatus(CREATED);
