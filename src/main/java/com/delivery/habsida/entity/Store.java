@@ -36,7 +36,7 @@ public class Store extends BaseEntity {
     private String snsLink;
 
     @Column(name = "last_order_number")
-    private Long lastOrderNumber;
+    private Long lastOrderNumber = 0L;
 
     public String getName() {
         return name;

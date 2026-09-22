@@ -42,6 +42,18 @@ public class Order extends BaseEntity {
     @Column(name = "reject_reason")
     private String rejectReason;
 
+    @Column(name = "delivery_city")
+    private String deliveryCity;
+
+    @Column(name = "delivery_street")
+    private String deliveryStreet;
+
+    @Column(name = "delivery_house")
+    private String deliveryHouse;
+
+    @Column(name = "delivery_apartment")
+    private String deliveryApartment;
+
     @ManyToOne
     @JoinColumn(name = "store_id")
     private Store store;
@@ -197,5 +209,37 @@ public class Order extends BaseEntity {
 
     public void setCancelledAt(LocalDateTime cancelledAt) {
         this.cancelledAt = cancelledAt;
+    }
+
+    public String getDeliveryCity() {
+        return deliveryCity;
+    }
+
+    public void setDeliveryCity(String deliveryCity) {
+        this.deliveryCity = deliveryCity;
+    }
+
+    public String getDeliveryStreet() {
+        return deliveryStreet;
+    }
+
+    public void setDeliveryStreet(String deliveryStreet) {
+        this.deliveryStreet = deliveryStreet;
+    }
+
+    public String getDeliveryHouse() {
+        return deliveryHouse;
+    }
+
+    public void setDeliveryHouse(String deliveryHouse) {
+        this.deliveryHouse = deliveryHouse;
+    }
+
+    public String getDeliveryApartment() {
+        return deliveryApartment;
+    }
+
+    public void setDeliveryApartment(String deliveryApartment) {
+        this.deliveryApartment = deliveryApartment;
     }
 }
