@@ -107,9 +107,12 @@ public class OrderService {
         return OrderDTO.from(order, itemDtos);
     }
 
-    public OrderDTO acceptOrder(Long orderId) {
+    public OrderDTO acceptOrder(Long storeId, Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found"));
+        if (!order.getStore().getId().equals(storeId)) {
+            throw new OrderNotFoundException("Order not found");
+        }
         if (!OrderStatus.canTransition(order.getOrderStatus(), OrderStatus.ACCEPTED)) {
             throw new InvalidOrderStatusTransitionException("Cannot transition from " + order.getOrderStatus() + " to ACCEPTED");
         }
@@ -122,9 +125,12 @@ public class OrderService {
         return OrderDTO.from(order, itemDtos);
     }
 
-    public OrderDTO rejectOrder(Long orderId, String reason) {
+    public OrderDTO rejectOrder(Long storeId, Long orderId, String reason) {
         Order  order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found"));
+        if (!order.getStore().getId().equals(storeId)) {
+            throw new OrderNotFoundException("Order not found");
+        }
         if (!OrderStatus.canTransition(order.getOrderStatus(), OrderStatus.REJECTED)) {
             throw new InvalidOrderStatusTransitionException("Cannot transition from " + order.getOrderStatus() + " to REJECTED");
         }
@@ -138,9 +144,12 @@ public class OrderService {
         return OrderDTO.from(order, itemDtos);
     }
 
-    public OrderDTO cancelOrder(Long orderId) {
+    public OrderDTO cancelOrder(Long storeId, Long orderId) {
         Order  order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found"));
+        if (!order.getStore().getId().equals(storeId)) {
+            throw new OrderNotFoundException("Order not found");
+        }
         if (!OrderStatus.canTransition(order.getOrderStatus(), OrderStatus.CANCELLED)) {
             throw new InvalidOrderStatusTransitionException("Cannot transition from " + order.getOrderStatus() + " to CANCELLED");
         }
@@ -151,5 +160,50 @@ public class OrderService {
         List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
         List<OrderItemDto> itemDtos = items.stream().map(OrderItemDto::from).toList();
         return OrderDTO.from(order, itemDtos);
+    }
+
+    public OrderDTO startOrder(Long storeId, Long orderId) {
+        Order  order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found"));
+        if (!order.getStore().getId().equals(storeId)) {
+            throw new OrderNotFoundException("Order not found");
+        }
+        if (!OrderStatus.canTransition(order.getOrderStatus(), OrderStatus.IN_PROGRESS)) {
+            throw new InvalidOrderStatusTransitionException("Cannot transition from " + order.getOrderStatus() + " to IN_PROGRESS");
+        }
+        order.setOrderStatus(IN_PROGRESS);
+        orderRepository.save(order);
+
+        List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
+        List<OrderItemDto> itemDtos = items.stream().map(OrderItemDto::from).toList();
+        return OrderDTO.from(order, itemDtos);
+    }
+
+    public OrderDTO completeOrder(Long storeId, Long orderId) {
+        Order  order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found"));
+        if (!order.getStore().getId().equals(storeId)) {
+            throw new OrderNotFoundException("Order not found");
+        }
+        if (!OrderStatus.canTransition(order.getOrderStatus(), OrderStatus.COMPLETED)) {
+            throw new InvalidOrderStatusTransitionException("Cannot transition from " + order.getOrderStatus() + " to COMPLETED");
+        }
+        order.setOrderStatus(COMPLETED);
+        orderRepository.save(order);
+
+        List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
+        List<OrderItemDto> itemDtos = items.stream().map(OrderItemDto::from).toList();
+        return OrderDTO.from(order, itemDtos);
+    }
+
+    public List<OrderDTO> getNewOrders(Long storeId) {
+        List<Order> orders = orderRepository.findByStoreIdAndOrderStatus(storeId, CREATED);
+        return orders.stream()
+                .map(order -> {
+                    List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
+                    List<OrderItemDto> itemDtos = items.stream().map(OrderItemDto::from).toList();
+                    return OrderDTO.from(order, itemDtos);
+                })
+                .toList();
     }
 }
