@@ -8,10 +8,11 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.delivery.habsida.entity.OrderStatus.CREATED;
+import static com.delivery.habsida.entity.OrderStatus.*;
 
 @Service
 public class OrderService {
@@ -62,7 +63,7 @@ public class OrderService {
 
             List<Integer> stockResult = productRepository.decreaseStockAndGet(product.getId(), itemRequest.quantity());
             if (stockResult.isEmpty()) {
-               throw new InsufficientStockException("Insufficient stock");
+                throw new InsufficientStockException("Insufficient stock");
             }
             OrderItem orderItem = new OrderItem();
             orderItem.setProduct(product);
@@ -103,6 +104,52 @@ public class OrderService {
         }
 
         List<OrderItemDto> itemDtos = orderItems.stream().map(OrderItemDto::from).toList();
+        return OrderDTO.from(order, itemDtos);
+    }
+
+    public OrderDTO acceptOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found"));
+        if (!OrderStatus.canTransition(order.getOrderStatus(), OrderStatus.ACCEPTED)) {
+            throw new InvalidOrderStatusTransitionException("Cannot transition from " + order.getOrderStatus() + " to ACCEPTED");
+        }
+        order.setOrderStatus(ACCEPTED);
+        order.setAcceptedAt(LocalDateTime.now());
+        orderRepository.save(order);
+
+        List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
+        List<OrderItemDto> itemDtos = items.stream().map(OrderItemDto::from).toList();
+        return OrderDTO.from(order, itemDtos);
+    }
+
+    public OrderDTO rejectOrder(Long orderId, String reason) {
+        Order  order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found"));
+        if (!OrderStatus.canTransition(order.getOrderStatus(), OrderStatus.REJECTED)) {
+            throw new InvalidOrderStatusTransitionException("Cannot transition from " + order.getOrderStatus() + " to REJECTED");
+        }
+        order.setOrderStatus(REJECTED);
+        order.setRejectedAt(LocalDateTime.now());
+        order.setRejectReason(reason);
+        orderRepository.save(order);
+
+        List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
+        List<OrderItemDto> itemDtos = items.stream().map(OrderItemDto::from).toList();
+        return OrderDTO.from(order, itemDtos);
+    }
+
+    public OrderDTO cancelOrder(Long orderId) {
+        Order  order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found"));
+        if (!OrderStatus.canTransition(order.getOrderStatus(), OrderStatus.CANCELLED)) {
+            throw new InvalidOrderStatusTransitionException("Cannot transition from " + order.getOrderStatus() + " to CANCELLED");
+        }
+        order.setOrderStatus(CANCELLED);
+        order.setCancelledAt(LocalDateTime.now());
+        orderRepository.save(order);
+
+        List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
+        List<OrderItemDto> itemDtos = items.stream().map(OrderItemDto::from).toList();
         return OrderDTO.from(order, itemDtos);
     }
 }
