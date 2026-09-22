@@ -1,7 +1,7 @@
 package com.delivery.habsida.exception;
 
-public class InvalidmodifierOptionException extends RuntimeException {
-  public InvalidmodifierOptionException(String message) {
-    super(message);
-  }
+public class InvalidModifierOptionException extends RuntimeException {
+    public InvalidModifierOptionException(String message) {
+        super(message);
+    }
 }
