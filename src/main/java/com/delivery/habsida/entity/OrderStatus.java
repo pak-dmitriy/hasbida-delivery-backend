@@ -17,7 +17,7 @@ public enum OrderStatus {
     static {
         ALLOWED_TRANSITIONS = new EnumMap<>(OrderStatus.class);
         ALLOWED_TRANSITIONS.put(CREATED, Set.of(ACCEPTED, REJECTED, CANCELLED));
-        ALLOWED_TRANSITIONS.put(ACCEPTED, Set.of(IN_PROGRESS));
+        ALLOWED_TRANSITIONS.put(ACCEPTED, Set.of(IN_PROGRESS, CANCELLED));
         ALLOWED_TRANSITIONS.put(IN_PROGRESS, Set.of(COMPLETED));
     }
 

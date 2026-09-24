@@ -22,7 +22,11 @@ public record OrderDTO(
         BigDecimal total,
         List<OrderItemDto> orderItems,
         String orderNumber,
-        String currency
+        String currency,
+        String deliveryCity,
+        String deliveryStreet,
+        String deliveryHouse,
+        String deliveryApartment
 ) {
 
     public static OrderDTO from(Order order, List<OrderItemDto> items) {
@@ -41,7 +45,11 @@ public record OrderDTO(
                 order.getTotal(),
                 items,
                 order.getOrderNumber(),
-                order.getCurrency()
+                order.getCurrency(),
+                order.getDeliveryCity(),
+                order.getDeliveryStreet(),
+                order.getDeliveryHouse(),
+                order.getDeliveryApartment()
         );
     }
 }

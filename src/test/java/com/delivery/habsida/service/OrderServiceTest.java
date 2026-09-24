@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -363,11 +364,39 @@ class OrderServiceTest {
 
         when(orderRepository.findByStoreIdAndOrderStatus(1L, OrderStatus.CREATED))
                 .thenReturn(List.of(order));
-        when(orderItemRepository.findByOrderId(order.getId())).thenReturn(List.of());
+        when(orderItemRepository.findByOrderIdIn(List.of(order.getId())))
+                .thenReturn(List.of());
 
         List<OrderDTO> result = orderService.getNewOrders(1L);
 
         assertEquals(1, result.size());
         assertEquals(OrderStatus.CREATED, result.get(0).orderStatus());
+    }
+
+    @Test
+    void cancelOrder_shouldSucceed_whenOrderIsAccepted() {
+        order.setOrderStatus(OrderStatus.ACCEPTED);
+        order.setCustomer(customer);
+        order.setCustomerAddress(customerAddress);
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderItemRepository.findByOrderId(order.getId())).thenReturn(List.of());
+
+        OrderDTO result = orderService.cancelOrder(1L, order.getId());
+
+        assertEquals(OrderStatus.CANCELLED, result.orderStatus());
+    }
+
+    @Test
+    void acceptOrder_shouldPropagateException_whenVersionConflictOccurs() {
+        order.setCustomer(customer);
+        order.setCustomerAddress(customerAddress);
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(order))
+                .thenThrow(new ObjectOptimisticLockingFailureException(Order.class, order.getId()));
+
+        assertThrows(ObjectOptimisticLockingFailureException.class,
+                () -> orderService.acceptOrder(1L, order.getId()));
     }
 }

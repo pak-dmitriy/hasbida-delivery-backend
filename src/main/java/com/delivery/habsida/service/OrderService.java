@@ -11,6 +11,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.delivery.habsida.entity.OrderStatus.*;
 
@@ -107,6 +109,7 @@ public class OrderService {
         return OrderDTO.from(order, itemDtos);
     }
 
+    @Transactional
     public OrderDTO acceptOrder(Long storeId, Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found"));
@@ -125,6 +128,7 @@ public class OrderService {
         return OrderDTO.from(order, itemDtos);
     }
 
+    @Transactional
     public OrderDTO rejectOrder(Long storeId, Long orderId, String reason) {
         Order  order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found"));
@@ -144,6 +148,7 @@ public class OrderService {
         return OrderDTO.from(order, itemDtos);
     }
 
+    @Transactional
     public OrderDTO cancelOrder(Long storeId, Long orderId) {
         Order  order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found"));
@@ -162,6 +167,7 @@ public class OrderService {
         return OrderDTO.from(order, itemDtos);
     }
 
+    @Transactional
     public OrderDTO startOrder(Long storeId, Long orderId) {
         Order  order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found"));
@@ -179,6 +185,7 @@ public class OrderService {
         return OrderDTO.from(order, itemDtos);
     }
 
+    @Transactional
     public OrderDTO completeOrder(Long storeId, Long orderId) {
         Order  order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found"));
@@ -196,11 +203,18 @@ public class OrderService {
         return OrderDTO.from(order, itemDtos);
     }
 
+    @Transactional
     public List<OrderDTO> getNewOrders(Long storeId) {
         List<Order> orders = orderRepository.findByStoreIdAndOrderStatus(storeId, CREATED);
+        List<Long> orderIds = orders.stream()
+                .map(Order::getId)
+                .toList();
+        List<OrderItem> allItems = orderItemRepository.findByOrderIdIn(orderIds);
+        Map<Long, List<OrderItem>> itemsByOrderId = allItems.stream()
+                .collect(Collectors.groupingBy(item -> item.getOrder().getId()));
         return orders.stream()
                 .map(order -> {
-                    List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
+                    List<OrderItem> items = itemsByOrderId.getOrDefault(order.getId(), List.of());
                     List<OrderItemDto> itemDtos = items.stream().map(OrderItemDto::from).toList();
                     return OrderDTO.from(order, itemDtos);
                 })
