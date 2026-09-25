@@ -26,7 +26,7 @@ public class ModifierGroup extends BaseEntity {
     @OneToMany(mappedBy = "modifierGroup")
     private List<ModifierOption> modifierOptions;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 

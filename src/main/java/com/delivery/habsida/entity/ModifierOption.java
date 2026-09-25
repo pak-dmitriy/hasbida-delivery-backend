@@ -17,8 +17,8 @@ public class ModifierOption extends BaseEntity {
     @Column(name = "is_free", nullable = false)
     private boolean isFree;
 
-    @ManyToOne
-    @JoinColumn(name = "modifier_group_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "modifier_group_id", nullable = false)
     private ModifierGroup modifierGroup;
 
     public String getName() {

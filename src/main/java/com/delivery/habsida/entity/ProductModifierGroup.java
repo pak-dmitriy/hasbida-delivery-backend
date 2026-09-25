@@ -6,12 +6,12 @@ import jakarta.persistence.*;
 @Table(name = "product_modifier_groups")
 public class ProductModifierGroup extends BaseEntity {
 
-    @ManyToOne
-    @JoinColumn(name = "product_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @ManyToOne
-    @JoinColumn(name = "modifier_group_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "modifier_group_id", nullable = false)
     private ModifierGroup modifierGroup;
 
 
