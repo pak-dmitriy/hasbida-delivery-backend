@@ -75,6 +75,10 @@ public class Order extends BaseEntity {
     @Column(name = "cancelled_at")
     private LocalDateTime cancelledAt;
 
+    @Version
+    @Column(name = "version")
+    private Long version;
+
     public String getOrderNumber() {
         return orderNumber;
     }
@@ -241,5 +245,13 @@ public class Order extends BaseEntity {
 
     public void setDeliveryApartment(String deliveryApartment) {
         this.deliveryApartment = deliveryApartment;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }

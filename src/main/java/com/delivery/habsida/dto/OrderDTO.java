@@ -14,6 +14,7 @@ public record OrderDTO(
         Long customerAddressId,
         OrderType orderType,
         OrderStatus orderStatus,
+        String rejectReason,
         String customerNote,
         BigDecimal subtotal,
         BigDecimal deliveryFee,
@@ -21,7 +22,11 @@ public record OrderDTO(
         BigDecimal total,
         List<OrderItemDto> orderItems,
         String orderNumber,
-        String currency
+        String currency,
+        String deliveryCity,
+        String deliveryStreet,
+        String deliveryHouse,
+        String deliveryApartment
 ) {
 
     public static OrderDTO from(Order order, List<OrderItemDto> items) {
@@ -32,6 +37,7 @@ public record OrderDTO(
                 order.getCustomerAddress().getId(),
                 order.getOrderType(),
                 order.getOrderStatus(),
+                order.getRejectReason(),
                 order.getCustomerNote(),
                 order.getSubTotal(),
                 order.getDeliveryFee(),
@@ -39,7 +45,11 @@ public record OrderDTO(
                 order.getTotal(),
                 items,
                 order.getOrderNumber(),
-                order.getCurrency()
+                order.getCurrency(),
+                order.getDeliveryCity(),
+                order.getDeliveryStreet(),
+                order.getDeliveryHouse(),
+                order.getDeliveryApartment()
         );
     }
 }
