@@ -15,8 +15,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-
 @Service
 @Transactional(readOnly = true)
 public class ProductModifierGroupService {
@@ -51,7 +49,7 @@ public class ProductModifierGroupService {
 
     @Transactional
     @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")
-    public ProductModifierGroupDto createProductModifierGroup(Long storeId, Long groupId, Long productId) {
+    public ProductModifierGroupDto createProductModifierGroup(Long storeId, Long productId, Long groupId) {
         Product product = getProductOrThrow(storeId, productId);
         ModifierGroup modifierGroup = getModifierGroupOrThrow(storeId, groupId);
         checkNotDuplicate(productId, groupId);
@@ -65,7 +63,7 @@ public class ProductModifierGroupService {
 
     @Transactional
     @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")
-    public void deleteProductModifierGroup(Long storeId, Long groupId, Long productId) {
+    public void deleteProductModifierGroup(Long storeId, Long productId, Long groupId) {
         getProductOrThrow(storeId, productId);
         getModifierGroupOrThrow(storeId, groupId);
 

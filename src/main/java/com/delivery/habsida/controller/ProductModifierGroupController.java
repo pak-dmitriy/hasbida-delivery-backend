@@ -20,14 +20,14 @@ public class ProductModifierGroupController {
                                                                               @PathVariable Long productId,
                                                                               @PathVariable Long groupId) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(productModifierGroupService.createProductModifierGroup(storeId, groupId, productId));
+                .body(productModifierGroupService.createProductModifierGroup(storeId, productId, groupId));
     }
 
     @DeleteMapping
     public ResponseEntity<Void> deleteProductModifierGroup(@PathVariable Long storeId,
                                                            @PathVariable Long productId,
                                                            @PathVariable Long groupId) {
-        productModifierGroupService.deleteProductModifierGroup(storeId, groupId, productId);
+        productModifierGroupService.deleteProductModifierGroup(storeId, productId, groupId);
         return ResponseEntity.noContent().build();
     }
 }
