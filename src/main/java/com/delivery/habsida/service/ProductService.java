@@ -58,6 +58,7 @@ public class ProductService {
         product.setStock(request.stock());
         product.setLowStockThreshold(request.lowStockThreshold());
         product.setStatus(request.status());
+        product.setDiscountPercent(request.discountPercent());
         product.setMaxQuantity(request.maxQuantity());
         product.setMinQuantity(request.minQuantity());
         product.setStore(store);
@@ -120,6 +121,7 @@ public class ProductService {
         product.setStock(request.stock());
         product.setLowStockThreshold(request.lowStockThreshold());
         product.setStatus(request.status());
+        product.setDiscountPercent(request.discountPercent());
         product.setMaxQuantity(request.maxQuantity());
         product.setMinQuantity(request.minQuantity());
         product.setCategory(category);

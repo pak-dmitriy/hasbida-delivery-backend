@@ -158,6 +158,7 @@ class ProductServiceTest {
                 ProductStatus.AVAILABLE,
                 5,
                 100,
+                1,
                 1L
         );
 
@@ -177,6 +178,7 @@ class ProductServiceTest {
                 ProductStatus.AVAILABLE,
                 5,
                 100,
+                1,
                 1L
         );
         assertThrows(StoreNotFoundException.class,
@@ -196,6 +198,7 @@ class ProductServiceTest {
                 ProductStatus.AVAILABLE,
                 5,
                 100,
+                1,
                 1L
         );
         assertThrows(CategoryNotFoundException.class,
@@ -216,6 +219,7 @@ class ProductServiceTest {
                 ProductStatus.AVAILABLE,
                 5,
                 100,
+                1,
                 1L
         );
 
@@ -239,6 +243,7 @@ class ProductServiceTest {
                 ProductStatus.AVAILABLE,
                 5,
                 100,
+                1,
                 1L
         );
 
@@ -258,6 +263,7 @@ class ProductServiceTest {
                 ProductStatus.AVAILABLE,
                 5,
                 100,
+                1,
                 1L
         );
 
@@ -279,6 +285,7 @@ class ProductServiceTest {
                 ProductStatus.AVAILABLE,
                 5,
                 100,
+                1,
                 1L
         );
 
@@ -300,6 +307,7 @@ class ProductServiceTest {
                 ProductStatus.AVAILABLE,
                 5,
                 100,
+                1,
                 1L
         );
 
@@ -326,6 +334,7 @@ class ProductServiceTest {
                 ProductStatus.AVAILABLE,
                 5,
                 100,
+                1,
                 1L
         );
 

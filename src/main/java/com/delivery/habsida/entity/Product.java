@@ -27,6 +27,9 @@ public class Product extends BaseEntity{
     @Column(name = "status", nullable = false)
     private ProductStatus status;
 
+    @Column(name = "discount_percent", nullable = false)
+    private int discountPercent;
+
     @Column(name = "max_quantity", nullable = false)
     private int maxQuantity;
 
@@ -120,4 +123,12 @@ public class Product extends BaseEntity{
 
     public List<ProductImage> getImages() {return images;}
     public void setImages(List<ProductImage> images) {this.images = images;}
+
+    public int getDiscountPercent() {
+        return discountPercent;
+    }
+
+    public void setDiscountPercent(int discountPercent) {
+        this.discountPercent = discountPercent;
+    }
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +25,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final OrderItemRepository orderItemRepository;
+    private static final BigDecimal DELIVERY_FEE = new BigDecimal("5.00");
 
 
     public OrderService(OrderRepository orderRepository, StoreRepository storeRepository, CustomerRepository customerRepository, CustomerAddressRepository customerAddressRepository, ProductRepository productRepository, OrderItemRepository orderItemRepository) {
@@ -49,6 +51,8 @@ public class OrderService {
         List<OrderItem> orderItems = new ArrayList<>();
 
         BigDecimal orderSubtotal = BigDecimal.ZERO;
+        BigDecimal discountTotal = BigDecimal.ZERO;
+
 
         for (OrderItemRequest itemRequest : orderCreateRequest.items()) {
             Product product = productRepository.findById(itemRequest.productId())
@@ -73,13 +77,28 @@ public class OrderService {
             orderItem.setProductPrice(product.getPrice());
             orderItem.setQuantity(itemRequest.quantity());
             BigDecimal subtotal = product.getPrice().multiply(BigDecimal.valueOf(itemRequest.quantity()));
+            BigDecimal itemDiscount = subtotal.multiply(BigDecimal.valueOf(product.getDiscountPercent()))
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+            discountTotal = discountTotal.add(itemDiscount);
             orderItem.setSubtotal(subtotal);
             orderItems.add(orderItem);
             orderSubtotal = orderSubtotal.add(subtotal);
+
+
         }
-        BigDecimal deliveryFee = BigDecimal.ZERO;
-        BigDecimal discountTotal = BigDecimal.ZERO;
+        BigDecimal deliveryFee;
+        if (orderCreateRequest.type() == OrderType.DELIVERY) {
+            deliveryFee = DELIVERY_FEE;
+        } else {
+            deliveryFee = BigDecimal.ZERO;
+        }
+
+
         BigDecimal total = orderSubtotal.add(deliveryFee).subtract(discountTotal);
+        if (total.compareTo(BigDecimal.ZERO) < 0) {
+            throw new InvalidOrderTotalException("Order total cannot be negative");
+        }
+
 
         Order order = new Order();
         order.setStore(store);
@@ -130,7 +149,7 @@ public class OrderService {
 
     @Transactional
     public OrderDTO rejectOrder(Long storeId, Long orderId, String reason) {
-        Order  order = orderRepository.findById(orderId)
+        Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found"));
         if (!order.getStore().getId().equals(storeId)) {
             throw new OrderNotFoundException("Order not found");
@@ -150,7 +169,7 @@ public class OrderService {
 
     @Transactional
     public OrderDTO cancelOrder(Long storeId, Long orderId) {
-        Order  order = orderRepository.findById(orderId)
+        Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found"));
         if (!order.getStore().getId().equals(storeId)) {
             throw new OrderNotFoundException("Order not found");
@@ -169,7 +188,7 @@ public class OrderService {
 
     @Transactional
     public OrderDTO startOrder(Long storeId, Long orderId) {
-        Order  order = orderRepository.findById(orderId)
+        Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found"));
         if (!order.getStore().getId().equals(storeId)) {
             throw new OrderNotFoundException("Order not found");
@@ -187,7 +206,7 @@ public class OrderService {
 
     @Transactional
     public OrderDTO completeOrder(Long storeId, Long orderId) {
-        Order  order = orderRepository.findById(orderId)
+        Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found"));
         if (!order.getStore().getId().equals(storeId)) {
             throw new OrderNotFoundException("Order not found");

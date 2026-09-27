@@ -53,8 +53,9 @@ class ProductControllerTest {
                 10,
                 5,
                 ProductStatus.AVAILABLE,
-                200,
+                20,
                 50,
+                1,
                 1L
         );
 
@@ -68,6 +69,7 @@ class ProductControllerTest {
                 ProductStatus.AVAILABLE,
                 200,
                 20,
+                1,
                 1L,
                 1L
         );
@@ -93,6 +95,7 @@ class ProductControllerTest {
                 ProductStatus.AVAILABLE,
                 200,
                 50,
+                1,
                 1L
         );
 
@@ -117,6 +120,7 @@ class ProductControllerTest {
                 ProductStatus.AVAILABLE,
                 200,
                 20,
+                1,
                 1L,
                 1L
         );
@@ -140,6 +144,7 @@ class ProductControllerTest {
                 ProductStatus.AVAILABLE,
                 200,
                 20,
+                1,
                 1L,
                 1L
         );
@@ -162,8 +167,9 @@ class ProductControllerTest {
                 10,
                 5,
                 ProductStatus.AVAILABLE,
-                200,
+                20,
                 50,
+                1,
                 1L
         );
 
@@ -175,8 +181,9 @@ class ProductControllerTest {
                 50,
                 10,
                 ProductStatus.AVAILABLE,
-                200,
                 20,
+                20,
+                1,
                 1L,
                 1L
         );

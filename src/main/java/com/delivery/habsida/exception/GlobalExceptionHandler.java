@@ -291,5 +291,16 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(InvalidOrderTotalException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handlerInvalidOrderTotalException(InvalidOrderTotalException ex, HttpServletRequest request) {
+        return new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                List.of(ex.getMessage()),
+                LocalDateTime.now(),
+                request.getRequestURI()
+        );
+    }
+
 }
 
