@@ -21,6 +21,7 @@ import java.util.Optional;
 import static com.delivery.habsida.entity.OrderType.DELIVERY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,6 +39,12 @@ class OrderServiceTest {
     private ProductRepository productRepository;
     @Mock
     private OrderItemRepository orderItemRepository;
+    @Mock
+    private ModifierOptionRepository modifierOptionRepository;
+    @Mock
+    private OrderItemModifierRepository orderItemModifierRepository;
+    @Mock
+    private ProductModifierGroupRepository productModifierGroupRepository;
 
     @InjectMocks
     private OrderService orderService;
@@ -48,6 +55,9 @@ class OrderServiceTest {
     private CustomerAddress customerAddress;
     private Product product;
     private Order order;
+    private ModifierOption modifierOption;
+    private OrderItemModifier orderItemModifier;
+    private ModifierGroup modifierGroup;
 
 
     @BeforeEach
@@ -58,9 +68,13 @@ class OrderServiceTest {
         customerAddress = new CustomerAddress();
         product = new Product();
         order = new Order();
+        modifierOption = new ModifierOption();
+        orderItemModifier = new OrderItemModifier();
+        modifierGroup = new ModifierGroup();
 
 
         store.setId(1L);
+        store.setDeliveryFee(new BigDecimal("5.00"));
         customer.setId(1L);
         customerAddress.setId(1L);
         product.setId(1L);
@@ -73,11 +87,18 @@ class OrderServiceTest {
         product.setStock(100);
         customerAddress.setCustomer(customer);
         order.setId(1L);
-        store.setDeliveryFee(new BigDecimal("5.00"));
         order.setStore(store);
         order.setOrderStatus(OrderStatus.CREATED);
         order.setCustomer(customer);
         order.setCustomerAddress(customerAddress);
+        modifierOption.setId(1L);
+        modifierOption.setName("Double size");
+        modifierOption.setPriceDelta(new BigDecimal("10.2"));
+        orderItemModifier.setId(1L);
+        orderItemModifier.setOptionName("Double size");
+        orderItemModifier.setPriceDelta(new BigDecimal("10.2"));
+        modifierGroup.setId(1L);
+        modifierOption.setModifierGroup(modifierGroup);
     }
 
     private OrderCreateRequest defaultRequest() {
@@ -86,7 +107,7 @@ class OrderServiceTest {
                 "Good",
                 1L,
                 1L,
-                List.of(new OrderItemRequest(1L, 2))
+                List.of(new OrderItemRequest(1L, 2, List.of()))
         );
     }
 
@@ -109,293 +130,341 @@ class OrderServiceTest {
     }
 
     @Test
-    void createOrder_shouldThrowException_whenStoreNotFound() {
-        when(storeRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(StoreNotFoundException.class,
-                () -> orderService.createOrder(1L, defaultRequest()));
-    }
-
-    @Test
-    void createOrder_shouldThrowException_whenCustomerNotFound() {
-        when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
-        when(customerRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(CustomerNotFoundException.class,
-                () -> orderService.createOrder(1L, defaultRequest()));
-    }
-
-    @Test
-    void createOrder_shouldThrowException_whenCustomerAddressNotFound() {
-        when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
-        when(customerAddressRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(CustomerAddressNotFoundException.class,
-                () -> orderService.createOrder(1L, defaultRequest()));
-    }
-
-    @Test
-    void createOrder_shouldThrowException_whenProductNotFound() {
-        when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
-        when(customerAddressRepository.findById(1L)).thenReturn(Optional.of(customerAddress));
-        when(productRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(ProductNotFoundException.class,
-                () -> orderService.createOrder(1L, defaultRequest()));
-    }
-
-    @Test
-    void createOrder_shouldGenerateCorrectOrderNumber_whenStoreHasExistingOrders() {
+    void createOrder_shouldCreateOrderItemModifier_whenModifierOptionSelected() {
         when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
         when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
         when(customerAddressRepository.findById(1L)).thenReturn(Optional.of(customerAddress));
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         when(productRepository.decreaseStockAndGet(1L, 2)).thenReturn(List.of(98));
-        when(storeRepository.incrementAndGetOrderNumber(1L)).thenReturn(List.of(6L));
+        when(storeRepository.incrementAndGetOrderNumber(1L)).thenReturn(List.of(1L));
+        when(modifierOptionRepository.findById(1L)).thenReturn(Optional.of(modifierOption));
+        when(orderItemModifierRepository.findByOrderItemId(any())).thenReturn(List.of(orderItemModifier));
+        when(productModifierGroupRepository.existsByProductIdAndModifierGroupId(1L,1L)).thenReturn(true);
 
-        OrderDTO result = orderService.createOrder(1L, defaultRequest());
-        assertEquals("6", result.orderNumber());
-
+        OrderCreateRequest request = new OrderCreateRequest
+                (
+                        DELIVERY,
+                        "Good",
+                        1L,
+                        1L,
+                        List.of(new OrderItemRequest(1L, 2, List.of(1L)))
+                );
+        OrderDTO result = orderService.createOrder(1L, request);
+        assertEquals(1, result.orderItems().get(0).orderItemModifiers().size());
+        assertEquals("Double size", result.orderItems().get(0).orderItemModifiers().get(0).optionName());
+        assertEquals(new BigDecimal("10.2"), result.orderItems().get(0).orderItemModifiers().get(0).priceDelta());
     }
 
     @Test
-    void createOrder_shouldThrowException_whenAddressBelongsToDifferentCustomer() {
-        Customer anotherCustomer = new Customer();
-        anotherCustomer.setId(2L);
-        customerAddress.setCustomer(anotherCustomer);
-
-        when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
-        when(customerAddressRepository.findById(1L)).thenReturn(Optional.of(customerAddress));
-
-        assertThrows(CustomerAddressNotFoundException.class,
-                () -> orderService.createOrder(1L, defaultRequest()));
-    }
-
-    @Test
-    void createOrder_shouldThrowException_whenProductFromDifferentStore() {
-        Store anotherStore = new Store();
-        anotherStore.setId(2L);
-        product.setStore(anotherStore);
-
+    void createOrder_shouldThrowException_whereModifierOptionNotFound() {
         when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
         when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
         when(customerAddressRepository.findById(1L)).thenReturn(Optional.of(customerAddress));
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(productRepository.decreaseStockAndGet(1L, 2)).thenReturn(List.of(98));
+        when(storeRepository.incrementAndGetOrderNumber(1L)).thenReturn(List.of(1L));
+        when(modifierOptionRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ProductNotFoundException.class,
-                () -> orderService.createOrder(1L, defaultRequest()));
+        OrderCreateRequest request = new OrderCreateRequest
+                (
+                        DELIVERY,
+                        "Good",
+                        1L,
+                        1L,
+                        List.of(new OrderItemRequest(1L, 2, List.of(1L)))
+                );
+        assertThrows(ModifierOptionNotFoundException.class,
+                ()-> orderService.createOrder(1L, request));
     }
 
-    @Test
-    void createOrder_shouldThrowException_whenProductNotAvailable() {
-        product.setStatus(ProductStatus.PAUSED);
+@Test
+void createOrder_shouldThrowException_whenStoreNotFound() {
+    when(storeRepository.findById(1L)).thenReturn(Optional.empty());
 
-        when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
-        when(customerAddressRepository.findById(1L)).thenReturn(Optional.of(customerAddress));
-        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+    assertThrows(StoreNotFoundException.class,
+            () -> orderService.createOrder(1L, defaultRequest()));
+}
 
-        assertThrows(ProductNotAvailableException.class,
-                () -> orderService.createOrder(1L, defaultRequest()));
-    }
+@Test
+void createOrder_shouldThrowException_whenCustomerNotFound() {
+    when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
+    when(customerRepository.findById(1L)).thenReturn(Optional.empty());
 
-    @Test
-    void createOrder_shouldThrowException_whenQuantityOutOfRange() {
-        when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
-        when(customerAddressRepository.findById(1L)).thenReturn(Optional.of(customerAddress));
-        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+    assertThrows(CustomerNotFoundException.class,
+            () -> orderService.createOrder(1L, defaultRequest()));
+}
 
-        OrderCreateRequest request = new OrderCreateRequest(
-                DELIVERY, "Good", 1L, 1L,
-                List.of(new OrderItemRequest(1L, 99))
-        );
+@Test
+void createOrder_shouldThrowException_whenCustomerAddressNotFound() {
+    when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
+    when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+    when(customerAddressRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(InvalidQuantityException.class,
-                () -> orderService.createOrder(1L, request));
-    }
+    assertThrows(CustomerAddressNotFoundException.class,
+            () -> orderService.createOrder(1L, defaultRequest()));
+}
 
-    @Test
-    void createOrder_shouldThrowException_whenInsufficientStock() {
-        when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
-        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
-        when(customerAddressRepository.findById(1L)).thenReturn(Optional.of(customerAddress));
-        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        when(productRepository.decreaseStockAndGet(1L, 2)).thenReturn(List.of());
+@Test
+void createOrder_shouldThrowException_whenProductNotFound() {
+    when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
+    when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+    when(customerAddressRepository.findById(1L)).thenReturn(Optional.of(customerAddress));
+    when(productRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(InsufficientStockException.class,
-                () -> orderService.createOrder(1L, defaultRequest()));
-    }
+    assertThrows(ProductNotFoundException.class,
+            () -> orderService.createOrder(1L, defaultRequest()));
+}
 
-    @Test
-    void acceptOrder_shouldSucceed_whenTransitionIsValid() {
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-        when(orderItemRepository.findByOrderId(order.getId())).thenReturn(List.of());
-        OrderDTO result = orderService.acceptOrder(1L, order.getId());
-        assertEquals(OrderStatus.ACCEPTED, result.orderStatus());
-    }
+@Test
+void createOrder_shouldGenerateCorrectOrderNumber_whenStoreHasExistingOrders() {
+    when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
+    when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+    when(customerAddressRepository.findById(1L)).thenReturn(Optional.of(customerAddress));
+    when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+    when(productRepository.decreaseStockAndGet(1L, 2)).thenReturn(List.of(98));
+    when(storeRepository.incrementAndGetOrderNumber(1L)).thenReturn(List.of(6L));
 
-    @Test
-    void acceptOrder_shouldThrowException_whenOrderNotFound() {
-        when(orderRepository.findById(1L)).thenReturn(Optional.empty());
+    OrderDTO result = orderService.createOrder(1L, defaultRequest());
+    assertEquals("6", result.orderNumber());
 
-        assertThrows(OrderNotFoundException.class,
-                () -> orderService.acceptOrder(1L, 1L));
-    }
+}
 
-    @Test
-    void acceptOrder_shouldThrowException_whenOrderBelongsToDifferentStore() {
-        Store anotherStore = new Store();
-        anotherStore.setId(2L);
-        order.setStore(anotherStore);
+@Test
+void createOrder_shouldThrowException_whenAddressBelongsToDifferentCustomer() {
+    Customer anotherCustomer = new Customer();
+    anotherCustomer.setId(2L);
+    customerAddress.setCustomer(anotherCustomer);
 
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
+    when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+    when(customerAddressRepository.findById(1L)).thenReturn(Optional.of(customerAddress));
 
-        assertThrows(OrderNotFoundException.class,
-                () -> orderService.acceptOrder(1L, order.getId()));
-    }
+    assertThrows(CustomerAddressNotFoundException.class,
+            () -> orderService.createOrder(1L, defaultRequest()));
+}
 
-    @Test
-    void acceptOrder_shouldThrowException_whenTransitionIsInvalid() {
-        order.setOrderStatus(OrderStatus.COMPLETED);
+@Test
+void createOrder_shouldThrowException_whenProductFromDifferentStore() {
+    Store anotherStore = new Store();
+    anotherStore.setId(2L);
+    product.setStore(anotherStore);
 
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
+    when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+    when(customerAddressRepository.findById(1L)).thenReturn(Optional.of(customerAddress));
+    when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
-        assertThrows(InvalidOrderStatusTransitionException.class,
-                () -> orderService.acceptOrder(1L, order.getId()));
-    }
+    assertThrows(ProductNotFoundException.class,
+            () -> orderService.createOrder(1L, defaultRequest()));
+}
 
-    @Test
-    void rejectOrder_shouldSucceed_whenTransitionIsValid() {
-        order.setCustomer(customer);
-        order.setCustomerAddress(customerAddress);
+@Test
+void createOrder_shouldThrowException_whenProductNotAvailable() {
+    product.setStatus(ProductStatus.PAUSED);
 
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-        when(orderItemRepository.findByOrderId(order.getId())).thenReturn(List.of());
+    when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
+    when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+    when(customerAddressRepository.findById(1L)).thenReturn(Optional.of(customerAddress));
+    when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
-        OrderDTO result = orderService.rejectOrder(1L, order.getId(), "Out of stock");
+    assertThrows(ProductNotAvailableException.class,
+            () -> orderService.createOrder(1L, defaultRequest()));
+}
 
-        assertEquals(OrderStatus.REJECTED, result.orderStatus());
-    }
+@Test
+void createOrder_shouldThrowException_whenQuantityOutOfRange() {
+    when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
+    when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+    when(customerAddressRepository.findById(1L)).thenReturn(Optional.of(customerAddress));
+    when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
-    @Test
-    void rejectOrder_shouldThrowException_whenTransitionIsInvalid() {
-        order.setOrderStatus(OrderStatus.COMPLETED);
+    OrderCreateRequest request = new OrderCreateRequest(
+            DELIVERY, "Good", 1L, 1L,
+            List.of(new OrderItemRequest(1L, 99, List.of()))
+    );
 
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    assertThrows(InvalidQuantityException.class,
+            () -> orderService.createOrder(1L, request));
+}
 
-        assertThrows(InvalidOrderStatusTransitionException.class,
-                () -> orderService.rejectOrder(1L, order.getId(), "Out of stock"));
-    }
+@Test
+void createOrder_shouldThrowException_whenInsufficientStock() {
+    when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
+    when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+    when(customerAddressRepository.findById(1L)).thenReturn(Optional.of(customerAddress));
+    when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+    when(productRepository.decreaseStockAndGet(1L, 2)).thenReturn(List.of());
 
-    @Test
-    void cancelOrder_shouldSucceed_whenTransitionIsValid() {
-        order.setCustomer(customer);
-        order.setCustomerAddress(customerAddress);
+    assertThrows(InsufficientStockException.class,
+            () -> orderService.createOrder(1L, defaultRequest()));
+}
 
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-        when(orderItemRepository.findByOrderId(order.getId())).thenReturn(List.of());
+@Test
+void acceptOrder_shouldSucceed_whenTransitionIsValid() {
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    when(orderItemRepository.findByOrderId(order.getId())).thenReturn(List.of());
+    OrderDTO result = orderService.acceptOrder(1L, order.getId());
+    assertEquals(OrderStatus.ACCEPTED, result.orderStatus());
+}
 
-        OrderDTO result = orderService.cancelOrder(1L, order.getId());
+@Test
+void acceptOrder_shouldThrowException_whenOrderNotFound() {
+    when(orderRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertEquals(OrderStatus.CANCELLED, result.orderStatus());
-    }
+    assertThrows(OrderNotFoundException.class,
+            () -> orderService.acceptOrder(1L, 1L));
+}
 
-    @Test
-    void cancelOrder_shouldThrowException_whenTransitionIsInvalid() {
-        order.setOrderStatus(OrderStatus.COMPLETED);
+@Test
+void acceptOrder_shouldThrowException_whenOrderBelongsToDifferentStore() {
+    Store anotherStore = new Store();
+    anotherStore.setId(2L);
+    order.setStore(anotherStore);
 
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 
-        assertThrows(InvalidOrderStatusTransitionException.class,
-                () -> orderService.cancelOrder(1L, order.getId()));
-    }
+    assertThrows(OrderNotFoundException.class,
+            () -> orderService.acceptOrder(1L, order.getId()));
+}
 
-    @Test
-    void startOrder_shouldSucceed_whenTransitionIsValid() {
-        order.setOrderStatus(OrderStatus.ACCEPTED);
-        order.setCustomer(customer);
-        order.setCustomerAddress(customerAddress);
+@Test
+void acceptOrder_shouldThrowException_whenTransitionIsInvalid() {
+    order.setOrderStatus(OrderStatus.COMPLETED);
 
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-        when(orderItemRepository.findByOrderId(order.getId())).thenReturn(List.of());
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 
-        OrderDTO result = orderService.startOrder(1L, order.getId());
+    assertThrows(InvalidOrderStatusTransitionException.class,
+            () -> orderService.acceptOrder(1L, order.getId()));
+}
 
-        assertEquals(OrderStatus.IN_PROGRESS, result.orderStatus());
-    }
+@Test
+void rejectOrder_shouldSucceed_whenTransitionIsValid() {
+    order.setCustomer(customer);
+    order.setCustomerAddress(customerAddress);
 
-    @Test
-    void startOrder_shouldThrowException_whenTransitionIsInvalid() {
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    when(orderItemRepository.findByOrderId(order.getId())).thenReturn(List.of());
 
-        assertThrows(InvalidOrderStatusTransitionException.class,
-                () -> orderService.startOrder(1L, order.getId()));
-    }
+    OrderDTO result = orderService.rejectOrder(1L, order.getId(), "Out of stock");
 
-    @Test
-    void completeOrder_shouldSucceed_whenTransitionIsValid() {
-        order.setOrderStatus(OrderStatus.IN_PROGRESS);
-        order.setCustomer(customer);
-        order.setCustomerAddress(customerAddress);
+    assertEquals(OrderStatus.REJECTED, result.orderStatus());
+}
 
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-        when(orderItemRepository.findByOrderId(order.getId())).thenReturn(List.of());
+@Test
+void rejectOrder_shouldThrowException_whenTransitionIsInvalid() {
+    order.setOrderStatus(OrderStatus.COMPLETED);
 
-        OrderDTO result = orderService.completeOrder(1L, order.getId());
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 
-        assertEquals(OrderStatus.COMPLETED, result.orderStatus());
-    }
+    assertThrows(InvalidOrderStatusTransitionException.class,
+            () -> orderService.rejectOrder(1L, order.getId(), "Out of stock"));
+}
 
-    @Test
-    void completeOrder_shouldThrowException_whenTransitionIsInvalid() {
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+@Test
+void cancelOrder_shouldSucceed_whenTransitionIsValid() {
+    order.setCustomer(customer);
+    order.setCustomerAddress(customerAddress);
 
-        assertThrows(InvalidOrderStatusTransitionException.class,
-                () -> orderService.completeOrder(1L, order.getId()));
-    }
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    when(orderItemRepository.findByOrderId(order.getId())).thenReturn(List.of());
 
-    @Test
-    void getNewOrders_shouldReturnOrderList() {
-        order.setCustomer(customer);
-        order.setCustomerAddress(customerAddress);
+    OrderDTO result = orderService.cancelOrder(1L, order.getId());
 
-        when(orderRepository.findByStoreIdAndOrderStatus(1L, OrderStatus.CREATED))
-                .thenReturn(List.of(order));
-        when(orderItemRepository.findByOrderIdIn(List.of(order.getId())))
-                .thenReturn(List.of());
+    assertEquals(OrderStatus.CANCELLED, result.orderStatus());
+}
 
-        List<OrderDTO> result = orderService.getNewOrders(1L);
+@Test
+void cancelOrder_shouldThrowException_whenTransitionIsInvalid() {
+    order.setOrderStatus(OrderStatus.COMPLETED);
 
-        assertEquals(1, result.size());
-        assertEquals(OrderStatus.CREATED, result.get(0).orderStatus());
-    }
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 
-    @Test
-    void cancelOrder_shouldSucceed_whenOrderIsAccepted() {
-        order.setOrderStatus(OrderStatus.ACCEPTED);
-        order.setCustomer(customer);
-        order.setCustomerAddress(customerAddress);
+    assertThrows(InvalidOrderStatusTransitionException.class,
+            () -> orderService.cancelOrder(1L, order.getId()));
+}
 
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-        when(orderItemRepository.findByOrderId(order.getId())).thenReturn(List.of());
+@Test
+void startOrder_shouldSucceed_whenTransitionIsValid() {
+    order.setOrderStatus(OrderStatus.ACCEPTED);
+    order.setCustomer(customer);
+    order.setCustomerAddress(customerAddress);
 
-        OrderDTO result = orderService.cancelOrder(1L, order.getId());
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    when(orderItemRepository.findByOrderId(order.getId())).thenReturn(List.of());
 
-        assertEquals(OrderStatus.CANCELLED, result.orderStatus());
-    }
+    OrderDTO result = orderService.startOrder(1L, order.getId());
 
-    @Test
-    void acceptOrder_shouldPropagateException_whenVersionConflictOccurs() {
-        order.setCustomer(customer);
-        order.setCustomerAddress(customerAddress);
+    assertEquals(OrderStatus.IN_PROGRESS, result.orderStatus());
+}
 
-        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-        when(orderRepository.save(order))
-                .thenThrow(new ObjectOptimisticLockingFailureException(Order.class, order.getId()));
+@Test
+void startOrder_shouldThrowException_whenTransitionIsInvalid() {
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+
+    assertThrows(InvalidOrderStatusTransitionException.class,
+            () -> orderService.startOrder(1L, order.getId()));
+}
+
+@Test
+void completeOrder_shouldSucceed_whenTransitionIsValid() {
+    order.setOrderStatus(OrderStatus.IN_PROGRESS);
+    order.setCustomer(customer);
+    order.setCustomerAddress(customerAddress);
+
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    when(orderItemRepository.findByOrderId(order.getId())).thenReturn(List.of());
+
+    OrderDTO result = orderService.completeOrder(1L, order.getId());
+
+    assertEquals(OrderStatus.COMPLETED, result.orderStatus());
+}
+
+@Test
+void completeOrder_shouldThrowException_whenTransitionIsInvalid() {
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+
+    assertThrows(InvalidOrderStatusTransitionException.class,
+            () -> orderService.completeOrder(1L, order.getId()));
+}
+
+@Test
+void getNewOrders_shouldReturnOrderList() {
+    order.setCustomer(customer);
+    order.setCustomerAddress(customerAddress);
+
+    when(orderRepository.findByStoreIdAndOrderStatus(1L, OrderStatus.CREATED))
+            .thenReturn(List.of(order));
+    when(orderItemRepository.findByOrderIdIn(List.of(order.getId())))
+            .thenReturn(List.of());
+
+    List<OrderDTO> result = orderService.getNewOrders(1L);
+
+    assertEquals(1, result.size());
+    assertEquals(OrderStatus.CREATED, result.get(0).orderStatus());
+}
+
+@Test
+void cancelOrder_shouldSucceed_whenOrderIsAccepted() {
+    order.setOrderStatus(OrderStatus.ACCEPTED);
+    order.setCustomer(customer);
+    order.setCustomerAddress(customerAddress);
+
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    when(orderItemRepository.findByOrderId(order.getId())).thenReturn(List.of());
+
+    OrderDTO result = orderService.cancelOrder(1L, order.getId());
+
+    assertEquals(OrderStatus.CANCELLED, result.orderStatus());
+}
+
+@Test
+void acceptOrder_shouldPropagateException_whenVersionConflictOccurs() {
+    order.setCustomer(customer);
+    order.setCustomerAddress(customerAddress);
+
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    when(orderRepository.save(order))
+            .thenThrow(new ObjectOptimisticLockingFailureException(Order.class, order.getId()));
 
         assertThrows(ObjectOptimisticLockingFailureException.class,
                 () -> orderService.acceptOrder(1L, order.getId()));
@@ -465,7 +534,7 @@ class OrderServiceTest {
         when(productRepository.decreaseStockAndGet(1L, 2)).thenReturn(List.of(98));
         OrderCreateRequest oneLineRequest = new OrderCreateRequest(
                 DELIVERY, "Good", 1L, 1L,
-                List.of(new OrderItemRequest(1L, 2))
+                List.of(new OrderItemRequest(1L, 2, List.of()))
         );
         OrderDTO oneLineResult = orderService.createOrder(1L, oneLineRequest);
 
@@ -473,8 +542,8 @@ class OrderServiceTest {
         OrderCreateRequest twoLinesRequest = new OrderCreateRequest(
                 DELIVERY, "Good", 1L, 1L,
                 List.of(
-                        new OrderItemRequest(1L, 1),
-                        new OrderItemRequest(1L, 1)
+                        new OrderItemRequest(1L, 1, List.of()),
+                        new OrderItemRequest(1L, 1, List.of())
                 )
         );
         OrderDTO twoLinesResult = orderService.createOrder(1L, twoLinesRequest);
