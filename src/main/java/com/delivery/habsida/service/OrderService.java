@@ -4,8 +4,8 @@ import com.delivery.habsida.dto.*;
 import com.delivery.habsida.entity.*;
 import com.delivery.habsida.exception.*;
 import com.delivery.habsida.repository.*;
-import org.springframework.stereotype.Service;
 import jakarta.transaction.Transactional;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -25,14 +25,28 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final OrderItemRepository orderItemRepository;
+    private final ModifierOptionRepository modifierOptionRepository;
+    private final OrderItemModifierRepository orderItemModifierRepository;
+    private final ProductModifierGroupRepository productModifierGroupRepository;
 
-    public OrderService(OrderRepository orderRepository, StoreRepository storeRepository, CustomerRepository customerRepository, CustomerAddressRepository customerAddressRepository, ProductRepository productRepository, OrderItemRepository orderItemRepository) {
+    public OrderService(OrderRepository orderRepository,
+                        StoreRepository storeRepository,
+                        CustomerRepository customerRepository,
+                        CustomerAddressRepository customerAddressRepository,
+                        ProductRepository productRepository,
+                        OrderItemRepository orderItemRepository,
+                        ModifierOptionRepository modifierOptionRepository,
+                        OrderItemModifierRepository orderItemModifierRepository,
+                        ProductModifierGroupRepository productModifierGroupRepository) {
         this.orderRepository = orderRepository;
         this.storeRepository = storeRepository;
         this.customerRepository = customerRepository;
         this.customerAddressRepository = customerAddressRepository;
         this.productRepository = productRepository;
         this.orderItemRepository = orderItemRepository;
+        this.modifierOptionRepository = modifierOptionRepository;
+        this.orderItemModifierRepository = orderItemModifierRepository;
+        this.productModifierGroupRepository = productModifierGroupRepository;
     }
 
     @Transactional
@@ -52,9 +66,11 @@ public class OrderService {
         BigDecimal discountTotal = BigDecimal.ZERO;
 
 
+        List<Product> products = new ArrayList<>();
         for (OrderItemRequest itemRequest : orderCreateRequest.items()) {
             Product product = productRepository.findById(itemRequest.productId())
                     .orElseThrow(() -> new ProductNotFoundException("Product not found"));
+            products.add(product);
             if (!product.getStore().getId().equals(storeId)) {
                 throw new ProductNotFoundException("Product not found");
             }
@@ -113,12 +129,54 @@ public class OrderService {
         order.setOrderNumber(String.valueOf(orderNumber));
         orderRepository.save(order);
 
-        for (OrderItem item : orderItems) {
+        for (int i = 0; i < orderItems.size(); i++) {
+            OrderItem item = orderItems.get(i);
+            Product product = products.get(i);
+            OrderItemRequest itemRequest = orderCreateRequest.items().get(i);
+
             item.setOrder(order);
+            orderItemRepository.save(item);
+            BigDecimal modifiersTotal = BigDecimal.ZERO;
+
+            for (Long optionId : itemRequest.modifierOptionIds()) {
+                ModifierOption modifierOption = modifierOptionRepository.findById(optionId)
+                        .orElseThrow(() -> new ModifierOptionNotFoundException("Option not found"));
+
+                modifiersTotal = modifiersTotal.add(modifierOption.getPriceDelta());
+                ModifierGroup modifierGroup = modifierOption.getModifierGroup();
+
+                if(!productModifierGroupRepository.existsByProductIdAndModifierGroupId(product.getId(), modifierGroup.getId()))
+                    throw new ModifierOptionNotFoundException("Option not found");
+
+                OrderItemModifier orderItemModifier = new OrderItemModifier();
+                orderItemModifier.setOptionName(modifierOption.getName());
+                orderItemModifier.setPriceDelta(modifierOption.getPriceDelta());
+                orderItemModifier.setModifierOption(modifierOption);
+                orderItemModifier.setOrderItem(item);
+                orderItemModifierRepository.save(orderItemModifier);
+            }
+            BigDecimal subtotal = product.getPrice().add(modifiersTotal).multiply(BigDecimal.valueOf(item.getQuantity()));
+            item.setSubtotal(subtotal);
             orderItemRepository.save(item);
         }
 
-        List<OrderItemDto> itemDtos = orderItems.stream().map(OrderItemDto::from).toList();
+        BigDecimal finalOrderSubtotal = BigDecimal.ZERO;
+        for(OrderItem item : orderItems) {
+            finalOrderSubtotal = finalOrderSubtotal.add(item.getSubtotal());
+        }
+        BigDecimal finalTotal = finalOrderSubtotal.add(deliveryFee).subtract(discountTotal);
+        order.setSubTotal(finalOrderSubtotal);
+        order.setTotal(finalTotal);
+        orderRepository.save(order);
+
+        List<OrderItemDto> itemDtos = orderItems.stream()
+                .map(item -> {
+                    List<OrderItemModifier> modifiersEntities = orderItemModifierRepository.findByOrderItemId(item.getId());
+                    List<OrderItemModifierDto> modifierDtos = modifiersEntities.stream()
+                            .map(OrderItemModifierDto::from)
+                            .toList();
+                    return OrderItemDto.from(item, modifierDtos);
+                }).toList();
         return OrderDTO.from(order, itemDtos);
     }
 
@@ -137,7 +195,13 @@ public class OrderService {
         orderRepository.save(order);
 
         List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
-        List<OrderItemDto> itemDtos = items.stream().map(OrderItemDto::from).toList();
+        List<OrderItemDto> itemDtos = items.stream()
+                .map(item -> {
+                    List<OrderItemModifier> modifierEntities = orderItemModifierRepository.findByOrderItemId(item.getId());
+                    List<OrderItemModifierDto> modifierDtos = modifierEntities.stream()
+                            .map(OrderItemModifierDto::from).toList();
+                    return OrderItemDto.from(item, modifierDtos);
+                }).toList();
         return OrderDTO.from(order, itemDtos);
     }
 
@@ -157,7 +221,13 @@ public class OrderService {
         orderRepository.save(order);
 
         List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
-        List<OrderItemDto> itemDtos = items.stream().map(OrderItemDto::from).toList();
+        List<OrderItemDto> itemDtos = items.stream()
+                .map(item -> {
+                    List<OrderItemModifier> modifierEntities = orderItemModifierRepository.findByOrderItemId(item.getId());
+                    List<OrderItemModifierDto> modifierDtos = modifierEntities.stream()
+                            .map(OrderItemModifierDto::from).toList();
+                    return OrderItemDto.from(item, modifierDtos);
+                }).toList();
         return OrderDTO.from(order, itemDtos);
     }
 
@@ -176,7 +246,13 @@ public class OrderService {
         orderRepository.save(order);
 
         List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
-        List<OrderItemDto> itemDtos = items.stream().map(OrderItemDto::from).toList();
+        List<OrderItemDto> itemDtos = items.stream()
+                .map(item -> {
+                    List<OrderItemModifier> modifierEntities = orderItemModifierRepository.findByOrderItemId(item.getId());
+                    List<OrderItemModifierDto> modifierDtos = modifierEntities.stream()
+                            .map(OrderItemModifierDto::from).toList();
+                    return OrderItemDto.from(item, modifierDtos);
+                }).toList();
         return OrderDTO.from(order, itemDtos);
     }
 
@@ -194,7 +270,13 @@ public class OrderService {
         orderRepository.save(order);
 
         List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
-        List<OrderItemDto> itemDtos = items.stream().map(OrderItemDto::from).toList();
+        List<OrderItemDto> itemDtos = items.stream()
+                .map(item -> {
+                    List<OrderItemModifier> modifierEntities = orderItemModifierRepository.findByOrderItemId(item.getId());
+                    List<OrderItemModifierDto> modifierDtos = modifierEntities.stream()
+                            .map(OrderItemModifierDto::from).toList();
+                    return OrderItemDto.from(item, modifierDtos);
+                }).toList();
         return OrderDTO.from(order, itemDtos);
     }
 
@@ -212,7 +294,13 @@ public class OrderService {
         orderRepository.save(order);
 
         List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
-        List<OrderItemDto> itemDtos = items.stream().map(OrderItemDto::from).toList();
+        List<OrderItemDto> itemDtos = items.stream()
+                .map(item -> {
+                    List<OrderItemModifier> modifierEntities = orderItemModifierRepository.findByOrderItemId(item.getId());
+                    List<OrderItemModifierDto> modifierDtos = modifierEntities.stream()
+                            .map(OrderItemModifierDto::from).toList();
+                    return OrderItemDto.from(item, modifierDtos);
+                }).toList();
         return OrderDTO.from(order, itemDtos);
     }
 
@@ -225,10 +313,23 @@ public class OrderService {
         List<OrderItem> allItems = orderItemRepository.findByOrderIdIn(orderIds);
         Map<Long, List<OrderItem>> itemsByOrderId = allItems.stream()
                 .collect(Collectors.groupingBy(item -> item.getOrder().getId()));
+        List<Long> itemIds = allItems.stream()
+                .map(OrderItem::getId)
+                .toList();
+        List<OrderItemModifier> allModifiers = orderItemModifierRepository.findByOrderItemIdIn(itemIds);
+        Map<Long,List<OrderItemModifier>> modifiersByItemId = allModifiers.stream()
+                .collect(Collectors.groupingBy(modifier-> modifier.getOrderItem().getId()));
         return orders.stream()
                 .map(order -> {
                     List<OrderItem> items = itemsByOrderId.getOrDefault(order.getId(), List.of());
-                    List<OrderItemDto> itemDtos = items.stream().map(OrderItemDto::from).toList();
+                    List<OrderItemDto> itemDtos = items.stream()
+                            .map(item-> {
+                                List<OrderItemModifier> modifierEntities = modifiersByItemId.getOrDefault(item.getId(), List.of());
+                                List<OrderItemModifierDto> modifierDtos = modifierEntities.stream()
+                                        .map(OrderItemModifierDto::from)
+                                        .toList();
+                                return OrderItemDto.from(item, modifierDtos);
+                            }).toList();
                     return OrderDTO.from(order, itemDtos);
                 })
                 .toList();
