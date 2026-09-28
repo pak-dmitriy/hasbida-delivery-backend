@@ -1,10 +1,8 @@
 package com.delivery.habsida.service;
 
+import com.delivery.habsida.dto.ModifierGroupWithOptionsDto;
 import com.delivery.habsida.dto.ProductModifierGroupDto;
-import com.delivery.habsida.entity.ModifierGroup;
-import com.delivery.habsida.entity.Product;
-import com.delivery.habsida.entity.ProductModifierGroup;
-import com.delivery.habsida.entity.Store;
+import com.delivery.habsida.entity.*;
 import com.delivery.habsida.exception.ModifierGroupNotFoundException;
 import com.delivery.habsida.exception.ProductModifierGroupAlreadyExistsException;
 import com.delivery.habsida.repository.ModifierGroupRepository;
@@ -17,6 +15,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,6 +43,7 @@ public class ProductModifierGroupServiceTest {
     private ModifierGroup modifierGroup;
     private Product product;
     private Store store;
+    private ModifierOption modifierOption;
 
     @BeforeEach
     void setUp() {
@@ -52,6 +53,13 @@ public class ProductModifierGroupServiceTest {
         modifierGroup = new ModifierGroup();
         modifierGroup.setId(1L);
         modifierGroup.setStore(store);
+
+        modifierOption = new ModifierOption();
+        modifierOption.setName("Name");
+        modifierOption.setPriceDelta(new BigDecimal("10.2"));
+
+        modifierOption.setModifierGroup(modifierGroup);
+        modifierGroup.setModifierOptions(List.of(modifierOption));
 
         product = new Product();
         product.setId(1L);
@@ -82,6 +90,15 @@ public class ProductModifierGroupServiceTest {
 
         assertThrows(ProductModifierGroupAlreadyExistsException.class,
                 () -> productModifierGroupService.createProductModifierGroup(1L, 1L, 1L));
+    }
+
+    @Test
+    void getModifierGroupWithOptions_success() {
+        when(productRepository.findByIdAndStoreId(1L, 1L)).thenReturn(Optional.of(product));
+        when(productModifierGroupRepository.findByProductId(1L)).thenReturn(List.of(productModifierGroup));
+
+        List<ModifierGroupWithOptionsDto> response = productModifierGroupService.getModifierGroupWithOptions(1L, 1L);
+        assertEquals(1, response.size());
     }
 
     @Test
