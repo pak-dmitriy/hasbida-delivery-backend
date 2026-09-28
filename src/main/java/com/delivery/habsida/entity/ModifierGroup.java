@@ -62,7 +62,7 @@ public class ModifierGroup extends BaseEntity {
         this.maxSelect = maxSelect;
     }
 
-    public List<ProductModifierGroup> getProductModifierGroup() {
+    public List<ProductModifierGroup> getProductModifierGroups() {
         return productModifierGroups;
     }
 
@@ -70,11 +70,11 @@ public class ModifierGroup extends BaseEntity {
         this.productModifierGroups = productModifierGroups;
     }
 
-    public List<ModifierOption> getModifierOption() {
+    public List<ModifierOption> getModifierOptions() {
         return modifierOptions;
     }
 
-    public void setModifierOption(List<ModifierOption> modifierOptions) {
+    public void setModifierOptions(List<ModifierOption> modifierOptions) {
         this.modifierOptions = modifierOptions;
     }
 

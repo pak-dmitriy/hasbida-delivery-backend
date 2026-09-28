@@ -1,5 +1,6 @@
 package com.delivery.habsida.service;
 
+import com.delivery.habsida.dto.ModifierGroupWithOptionsDto;
 import com.delivery.habsida.dto.ProductModifierGroupDto;
 import com.delivery.habsida.entity.ModifierGroup;
 import com.delivery.habsida.entity.Product;
@@ -14,6 +15,8 @@ import com.delivery.habsida.repository.ProductRepository;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -59,6 +62,14 @@ public class ProductModifierGroupService {
         created.setModifierGroup(modifierGroup);
 
         return ProductModifierGroupDto.from(productModifierGroupRepository.save(created));
+    }
+
+    @PreAuthorize("@storeAccessGuard.canAccessStore(authentication,#storeId)")
+    public List<ModifierGroupWithOptionsDto> getModifierGroupWithOptions(Long storeId, Long productId) {
+        getProductOrThrow(storeId, productId);
+        return productModifierGroupRepository.findByProductId(productId)
+                .stream()
+                .map(productModifierGroup-> ModifierGroupWithOptionsDto.from(productModifierGroup.getModifierGroup())).toList();
     }
 
     @Transactional
