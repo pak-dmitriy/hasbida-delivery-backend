@@ -15,6 +15,7 @@ public record ProductCreateRequest (
         String description,
 
         @NotNull(message = "Price can not be empty")
+        @DecimalMin(value = "0.0", inclusive = false, message = "Price must be greater than zero")
         BigDecimal price,
 
         @NotNull

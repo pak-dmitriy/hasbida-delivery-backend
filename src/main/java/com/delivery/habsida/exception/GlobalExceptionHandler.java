@@ -2,7 +2,6 @@ package com.delivery.habsida.exception;
 
 import com.delivery.habsida.dto.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
-import org.hibernate.tool.schema.spi.SqlScriptException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -195,7 +194,62 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ImageNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handlerImageNotFoundException(ImageNotFoundException ex, HttpServletRequest request) {
+    public ErrorResponse handleImageNotFoundException(ImageNotFoundException ex, HttpServletRequest request) {
+        return new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                List.of(ex.getMessage()),
+                LocalDateTime.now(),
+                request.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler(ModifierGroupNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleModifierGroupNotFoundException(ModifierGroupNotFoundException ex, HttpServletRequest request) {
+        return new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                List.of(ex.getMessage()),
+                LocalDateTime.now(),
+                request.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler(ModifierOptionNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleModifierOptionNotFoundException(ModifierOptionNotFoundException ex, HttpServletRequest request) {
+        return new ErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                List.of(ex.getMessage()),
+                LocalDateTime.now(),
+                request.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler(InvalidModifierOptionException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleInvalidModifierOptionException(InvalidModifierOptionException ex, HttpServletRequest request) {
+        return new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                List.of(ex.getMessage()),
+                LocalDateTime.now(),
+                request.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler(ProductModifierGroupAlreadyExistsException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleProductModifierGroupAlreadyExistsException(ProductModifierGroupAlreadyExistsException ex, HttpServletRequest request) {
+        return new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                List.of(ex.getMessage()),
+                LocalDateTime.now(),
+                request.getRequestURI()
+        );
+    }
+
+    @ExceptionHandler(ProductModifierGroupNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleProductModifierGroupNotFoundException(ProductModifierGroupNotFoundException ex, HttpServletRequest request) {
         return new ErrorResponse(
                 HttpStatus.NOT_FOUND.value(),
                 List.of(ex.getMessage()),

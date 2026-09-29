@@ -7,12 +7,12 @@ import com.delivery.habsida.entity.Product;
 import com.delivery.habsida.entity.ProductStatus;
 import com.delivery.habsida.entity.Store;
 import com.delivery.habsida.exception.CategoryNotFoundException;
+import com.delivery.habsida.exception.InvalidQuantityException;
 import com.delivery.habsida.exception.ProductNotFoundException;
 import com.delivery.habsida.exception.StoreNotFoundException;
 import com.delivery.habsida.repository.CategoryRepository;
 import com.delivery.habsida.repository.ProductRepository;
 import com.delivery.habsida.repository.StoreRepository;
-import com.delivery.habsida.security.StoreAccessGuard;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +37,10 @@ public class ProductService {
     @Transactional
     @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")
     public ProductDto createProduct(Long storeId, ProductCreateRequest request) {
+
+        if (request.minQuantity() > request.maxQuantity()) {
+            throw new InvalidQuantityException("MinQuantity cannot be greater than MaxQuantity");
+        }
 
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new StoreNotFoundException("Store not found"));
@@ -98,6 +102,10 @@ public class ProductService {
     @Transactional
     @PreAuthorize("@storeAccessGuard.canAccessStore(authentication, #storeId)")
     public ProductDto updateProduct(Long storeId, Long productId, ProductCreateRequest request) {
+
+        if (request.minQuantity() > request.maxQuantity()) {
+            throw new InvalidQuantityException("MinQuantity cannot be greater than MaxQuantity");
+        }
 
         Product product = getProductOrThrow(storeId, productId);
 
