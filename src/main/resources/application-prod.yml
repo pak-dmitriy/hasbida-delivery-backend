@@ -8,6 +8,9 @@ jwt:
   secret: ${JWT_SECRET}
   expiration: 86400000
 
+server:
+  forward-headers-strategy: framework
+
 cors:
   allowed-origins:
     http://localhost:5173,

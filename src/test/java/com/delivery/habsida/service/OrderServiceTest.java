@@ -73,6 +73,7 @@ class OrderServiceTest {
         product.setStock(100);
         customerAddress.setCustomer(customer);
         order.setId(1L);
+        store.setDeliveryFee(new BigDecimal("5.00"));
         order.setStore(store);
         order.setOrderStatus(OrderStatus.CREATED);
         order.setCustomer(customer);
@@ -100,7 +101,7 @@ class OrderServiceTest {
 
         OrderDTO result = orderService.createOrder(1L, defaultRequest());
 
-        assertEquals(new BigDecimal("20.00"), result.total());
+        assertEquals(new BigDecimal("25.00"), result.total());
         assertEquals(1, result.orderItems().size());
         assertEquals("apple", result.orderItems().get(0).productName());
         assertEquals("1", result.orderNumber());
@@ -398,5 +399,87 @@ class OrderServiceTest {
 
         assertThrows(ObjectOptimisticLockingFailureException.class,
                 () -> orderService.acceptOrder(1L, order.getId()));
+    }
+
+    @Test
+    void createOrder_shouldApplyDiscount_whenProductHasDiscount() {
+        product.setDiscountPercent(20);
+
+        when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+        when(customerAddressRepository.findById(1L)).thenReturn(Optional.of(customerAddress));
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(productRepository.decreaseStockAndGet(1L, 2)).thenReturn(List.of(98));
+        when(storeRepository.incrementAndGetOrderNumber(1L)).thenReturn(List.of(1L));
+
+        OrderDTO result = orderService.createOrder(1L, defaultRequest());
+
+        assertEquals(new BigDecimal("4.00"), result.discountTotal());
+        assertEquals(new BigDecimal("21.00"), result.total());
+    }
+
+    @Test
+    void createOrder_shouldHaveZeroDiscount_whenProductHasNoDiscount() {
+
+        when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+        when(customerAddressRepository.findById(1L)).thenReturn(Optional.of(customerAddress));
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(productRepository.decreaseStockAndGet(1L, 2)).thenReturn(List.of(98));
+        when(storeRepository.incrementAndGetOrderNumber(1L)).thenReturn(List.of(1L));
+
+        OrderDTO result = orderService.createOrder(1L, defaultRequest());
+
+        assertEquals(new BigDecimal("0.00"), result.discountTotal());
+        assertEquals(new BigDecimal("25.00"), result.total());
+    }
+
+    @Test
+    void createOrder_shouldRoundDiscountToTwoDecimals_whenDivisionIsNotExact() {
+        product.setPrice(new BigDecimal("10.01"));
+        product.setDiscountPercent(33);
+
+        when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+        when(customerAddressRepository.findById(1L)).thenReturn(Optional.of(customerAddress));
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(productRepository.decreaseStockAndGet(1L, 2)).thenReturn(List.of(98));
+        when(storeRepository.incrementAndGetOrderNumber(1L)).thenReturn(List.of(1L));
+
+        OrderDTO result = orderService.createOrder(1L, defaultRequest());
+
+        assertEquals(new BigDecimal("6.60"), result.discountTotal());
+    }
+
+    @Test
+    void createOrder_shouldApplySameTotalDiscount_regardlessOfItemSplitting() {
+        product.setPrice(new BigDecimal("0.01"));
+        product.setDiscountPercent(50);
+
+        when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+        when(customerAddressRepository.findById(1L)).thenReturn(Optional.of(customerAddress));
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(storeRepository.incrementAndGetOrderNumber(1L)).thenReturn(List.of(1L));
+
+        when(productRepository.decreaseStockAndGet(1L, 2)).thenReturn(List.of(98));
+        OrderCreateRequest oneLineRequest = new OrderCreateRequest(
+                DELIVERY, "Good", 1L, 1L,
+                List.of(new OrderItemRequest(1L, 2))
+        );
+        OrderDTO oneLineResult = orderService.createOrder(1L, oneLineRequest);
+
+        when(productRepository.decreaseStockAndGet(1L, 1)).thenReturn(List.of(99));
+        OrderCreateRequest twoLinesRequest = new OrderCreateRequest(
+                DELIVERY, "Good", 1L, 1L,
+                List.of(
+                        new OrderItemRequest(1L, 1),
+                        new OrderItemRequest(1L, 1)
+                )
+        );
+        OrderDTO twoLinesResult = orderService.createOrder(1L, twoLinesRequest);
+
+        assertEquals(new BigDecimal("0.02"), oneLineResult.discountTotal());
+        assertEquals(oneLineResult.discountTotal(), twoLinesResult.discountTotal());
     }
 }

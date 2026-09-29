@@ -64,6 +64,7 @@ public class StoreService {
         store.setLogo(storeCreateRequest.logo());
         store.setStatus(storeCreateRequest.status());
         store.setPickupAddress(storeCreateRequest.pickupAddress());
+        store.setDeliveryFee(storeCreateRequest.deliveryFee());
 
         // 2. Сохраняем в базу (получаем ID)
         Store savedStore = storeRepository.save(store);
@@ -77,7 +78,8 @@ public class StoreService {
                 savedStore.getPhone(),
                 savedStore.getLogo(),
                 savedStore.getStatus(),
-                savedStore.getPickupAddress()
+                savedStore.getPickupAddress(),
+                savedStore.getDeliveryFee()
         );
     }
 
@@ -91,8 +93,8 @@ public class StoreService {
                 store.getPhone(),
                 store.getLogo(),
                 store.getStatus(),
-                store.getPickupAddress()
-
+                store.getPickupAddress(),
+                store.getDeliveryFee()
         );
     }
 
