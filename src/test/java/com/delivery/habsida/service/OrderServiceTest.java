@@ -73,6 +73,7 @@ class OrderServiceTest {
         product.setStock(100);
         customerAddress.setCustomer(customer);
         order.setId(1L);
+        store.setDeliveryFee(new BigDecimal("5.00"));
         order.setStore(store);
         order.setOrderStatus(OrderStatus.CREATED);
         order.setCustomer(customer);
