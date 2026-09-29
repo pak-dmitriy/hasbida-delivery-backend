@@ -449,4 +449,36 @@ class OrderServiceTest {
 
         assertEquals(new BigDecimal("6.61"), result.discountTotal());
     }
+
+    @Test
+    void createOrder_shouldApplySameTotalDiscount_regardlessOfItemSplitting() {
+        product.setPrice(new BigDecimal("0.01"));
+        product.setDiscountPercent(50);
+
+        when(storeRepository.findById(1L)).thenReturn(Optional.of(store));
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+        when(customerAddressRepository.findById(1L)).thenReturn(Optional.of(customerAddress));
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(storeRepository.incrementAndGetOrderNumber(1L)).thenReturn(List.of(1L));
+
+        when(productRepository.decreaseStockAndGet(1L, 2)).thenReturn(List.of(98));
+        OrderCreateRequest oneLineRequest = new OrderCreateRequest(
+                DELIVERY, "Good", 1L, 1L,
+                List.of(new OrderItemRequest(1L, 2))
+        );
+        OrderDTO oneLineResult = orderService.createOrder(1L, oneLineRequest);
+
+        when(productRepository.decreaseStockAndGet(1L, 1)).thenReturn(List.of(99));
+        OrderCreateRequest twoLinesRequest = new OrderCreateRequest(
+                DELIVERY, "Good", 1L, 1L,
+                List.of(
+                        new OrderItemRequest(1L, 1),
+                        new OrderItemRequest(1L, 1)
+                )
+        );
+        OrderDTO twoLinesResult = orderService.createOrder(1L, twoLinesRequest);
+
+        assertEquals(new BigDecimal("0.02"), oneLineResult.discountTotal());
+        assertEquals(oneLineResult.discountTotal(), twoLinesResult.discountTotal());
+    }
 }

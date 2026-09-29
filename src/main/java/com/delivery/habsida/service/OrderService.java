@@ -77,8 +77,9 @@ public class OrderService {
             orderItem.setProductPrice(product.getPrice());
             orderItem.setQuantity(itemRequest.quantity());
             BigDecimal subtotal = product.getPrice().multiply(BigDecimal.valueOf(itemRequest.quantity()));
-            BigDecimal itemDiscount = subtotal.multiply(BigDecimal.valueOf(product.getDiscountPercent()))
+            BigDecimal unitDiscount = product.getPrice().multiply(BigDecimal.valueOf(product.getDiscountPercent()))
                     .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+            BigDecimal itemDiscount = unitDiscount.multiply(BigDecimal.valueOf(itemRequest.quantity()));
             discountTotal = discountTotal.add(itemDiscount);
             orderItem.setSubtotal(subtotal);
             orderItems.add(orderItem);
