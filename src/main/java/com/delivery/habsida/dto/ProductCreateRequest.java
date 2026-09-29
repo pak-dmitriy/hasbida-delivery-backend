@@ -15,7 +15,8 @@ public record ProductCreateRequest (
         String description,
 
         @NotNull(message = "Price can not be empty")
-        @DecimalMin(value = "0.0", inclusive = false, message = "Price must be greater than zero")
+        @Positive(message = "Price must be greater than zero")
+        @Digits(integer = 8, fraction = 2, message = "Price must have up to 8 digits and 2 decimals")
         BigDecimal price,
 
         @NotNull

@@ -2,6 +2,8 @@ package com.delivery.habsida.entity;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "store")
 public class Store extends BaseEntity {
@@ -37,6 +39,9 @@ public class Store extends BaseEntity {
 
     @Column(name = "last_order_number")
     private Long lastOrderNumber = 0L;
+
+    @Column(name = "delivery_fee", nullable = false)
+    private BigDecimal deliveryFee = BigDecimal.ZERO;
 
     public String getName() {
         return name;
@@ -116,5 +121,13 @@ public class Store extends BaseEntity {
 
     public void setLastOrderNumber(Long lastOrderNumber) {
         this.lastOrderNumber = lastOrderNumber;
+    }
+
+    public BigDecimal getDeliveryFee() {
+        return deliveryFee;
+    }
+
+    public void setDeliveryFee(BigDecimal deliveryFee) {
+        this.deliveryFee = deliveryFee;
     }
 }

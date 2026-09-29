@@ -25,8 +25,6 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final OrderItemRepository orderItemRepository;
-    private static final BigDecimal DELIVERY_FEE = new BigDecimal("5.00");
-
 
     public OrderService(OrderRepository orderRepository, StoreRepository storeRepository, CustomerRepository customerRepository, CustomerAddressRepository customerAddressRepository, ProductRepository productRepository, OrderItemRepository orderItemRepository) {
         this.orderRepository = orderRepository;
@@ -89,17 +87,12 @@ public class OrderService {
         }
         BigDecimal deliveryFee;
         if (orderCreateRequest.type() == OrderType.DELIVERY) {
-            deliveryFee = DELIVERY_FEE;
+            deliveryFee = store.getDeliveryFee();
         } else {
             deliveryFee = BigDecimal.ZERO;
         }
 
-
         BigDecimal total = orderSubtotal.add(deliveryFee).subtract(discountTotal);
-        if (total.compareTo(BigDecimal.ZERO) < 0) {
-            throw new InvalidOrderTotalException("Order total cannot be negative");
-        }
-
 
         Order order = new Order();
         order.setStore(store);

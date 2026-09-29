@@ -3,6 +3,8 @@ package com.delivery.habsida.dto;
 import com.delivery.habsida.entity.Status;
 import com.delivery.habsida.entity.TypeStoreServices;
 
+import java.math.BigDecimal;
+
 public record StoreCreateResponse(
         Long id,
         String name,
@@ -12,5 +14,6 @@ public record StoreCreateResponse(
         String phone,
         String logo,
         Status status,
-        String pickupAddress
+        String pickupAddress,
+        BigDecimal deliveryFee
 ) {}

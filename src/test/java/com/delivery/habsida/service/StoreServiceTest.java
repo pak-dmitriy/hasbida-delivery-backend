@@ -19,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,7 +54,8 @@ class StoreServiceTest {
                 "+998901234567",
                 "logo.png",
                 "Tashkent, Amir Temur 1",
-                Status.ACTIVE
+                Status.ACTIVE,
+                new BigDecimal("5.00")
         );
 
         store = new Store();
