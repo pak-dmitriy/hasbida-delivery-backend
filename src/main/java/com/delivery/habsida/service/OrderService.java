@@ -76,16 +76,16 @@ public class OrderService {
             orderItem.setProductName(product.getName());
             orderItem.setProductPrice(product.getPrice());
             orderItem.setQuantity(itemRequest.quantity());
+            orderItem.setDiscountPercent(product.getDiscountPercent());
             BigDecimal subtotal = product.getPrice().multiply(BigDecimal.valueOf(itemRequest.quantity()));
             BigDecimal unitDiscount = product.getPrice().multiply(BigDecimal.valueOf(product.getDiscountPercent()))
                     .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
             BigDecimal itemDiscount = unitDiscount.multiply(BigDecimal.valueOf(itemRequest.quantity()));
+            orderItem.setDiscountAmount(itemDiscount);
             discountTotal = discountTotal.add(itemDiscount);
             orderItem.setSubtotal(subtotal);
             orderItems.add(orderItem);
             orderSubtotal = orderSubtotal.add(subtotal);
-
-
         }
         BigDecimal deliveryFee;
         if (orderCreateRequest.type() == OrderType.DELIVERY) {

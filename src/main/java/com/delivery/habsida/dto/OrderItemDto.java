@@ -10,7 +10,9 @@ public record OrderItemDto(
         String productName,
         BigDecimal productPrice,
         Integer quantity,
-        BigDecimal subtotal
+        BigDecimal subtotal,
+        Integer discountPercent,
+        BigDecimal discountAmount
         ) {
 
     public static OrderItemDto from(OrderItem orderItem) {
@@ -20,7 +22,9 @@ public record OrderItemDto(
                 orderItem.getProductName(),
                 orderItem.getProductPrice(),
                 orderItem.getQuantity(),
-                orderItem.getSubtotal()
+                orderItem.getSubtotal(),
+                orderItem.getDiscountPercent(),
+                orderItem.getDiscountAmount()
         );
     }
 }

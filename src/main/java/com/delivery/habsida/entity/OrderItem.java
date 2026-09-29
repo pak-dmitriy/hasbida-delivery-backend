@@ -20,6 +20,12 @@ public class OrderItem extends BaseEntity {
     @Column(name = "subtotal", nullable = false)
     private BigDecimal subtotal;
 
+    @Column(name = "discount_percent", nullable = false)
+    private Integer discountPercent;
+
+    @Column(name = "discount_amount", nullable = false)
+    private BigDecimal discountAmount;
+
     @ManyToOne
     @JoinColumn(name = "product_id")
     private Product product;
@@ -74,5 +80,21 @@ public class OrderItem extends BaseEntity {
 
     public void setOrder(Order order) {
         this.order = order;
+    }
+
+    public Integer getDiscountPercent() {
+        return discountPercent;
+    }
+
+    public void setDiscountPercent(Integer discountPercent) {
+        this.discountPercent = discountPercent;
+    }
+
+    public BigDecimal getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(BigDecimal discountAmount) {
+        this.discountAmount = discountAmount;
     }
 }

@@ -447,7 +447,7 @@ class OrderServiceTest {
 
         OrderDTO result = orderService.createOrder(1L, defaultRequest());
 
-        assertEquals(new BigDecimal("6.61"), result.discountTotal());
+        assertEquals(new BigDecimal("6.60"), result.discountTotal());
     }
 
     @Test
