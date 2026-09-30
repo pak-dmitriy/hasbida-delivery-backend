@@ -138,22 +138,25 @@ public class OrderService {
             orderItemRepository.save(item);
             BigDecimal modifiersTotal = BigDecimal.ZERO;
 
-            for (Long optionId : itemRequest.modifierOptionIds()) {
-                ModifierOption modifierOption = modifierOptionRepository.findById(optionId)
-                        .orElseThrow(() -> new ModifierOptionNotFoundException("Option not found"));
+            if (itemRequest.modifierOptionIds() != null) {
+                for (Long optionId : itemRequest.modifierOptionIds()) {
+                    ModifierOption modifierOption = modifierOptionRepository.findById(optionId)
+                            .orElseThrow(() -> new ModifierOptionNotFoundException("Option not found"));
 
-                modifiersTotal = modifiersTotal.add(modifierOption.getPriceDelta());
-                ModifierGroup modifierGroup = modifierOption.getModifierGroup();
+                    modifiersTotal = modifiersTotal.add(modifierOption.getPriceDelta());
+                    ModifierGroup modifierGroup = modifierOption.getModifierGroup();
 
-                if(!productModifierGroupRepository.existsByProductIdAndModifierGroupId(product.getId(), modifierGroup.getId()))
-                    throw new ModifierOptionNotFoundException("Option not found");
+                    if (!productModifierGroupRepository.existsByProductIdAndModifierGroupId(product.getId(), modifierGroup.getId()))
+                        throw new ModifierOptionNotFoundException("Option not found");
 
-                OrderItemModifier orderItemModifier = new OrderItemModifier();
-                orderItemModifier.setOptionName(modifierOption.getName());
-                orderItemModifier.setPriceDelta(modifierOption.getPriceDelta());
-                orderItemModifier.setModifierOption(modifierOption);
-                orderItemModifier.setOrderItem(item);
-                orderItemModifierRepository.save(orderItemModifier);
+                    OrderItemModifier orderItemModifier = new OrderItemModifier();
+                    orderItemModifier.setOptionName(modifierOption.getName());
+                    orderItemModifier.setPriceDelta(modifierOption.getPriceDelta());
+                    orderItemModifier.setModifierOption(modifierOption);
+                    orderItemModifier.setOrderItem(item);
+                    orderItemModifierRepository.save(orderItemModifier);
+                }
+
             }
             BigDecimal subtotal = product.getPrice().add(modifiersTotal).multiply(BigDecimal.valueOf(item.getQuantity()));
             item.setSubtotal(subtotal);
@@ -161,7 +164,7 @@ public class OrderService {
         }
 
         BigDecimal finalOrderSubtotal = BigDecimal.ZERO;
-        for(OrderItem item : orderItems) {
+        for (OrderItem item : orderItems) {
             finalOrderSubtotal = finalOrderSubtotal.add(item.getSubtotal());
         }
         BigDecimal finalTotal = finalOrderSubtotal.add(deliveryFee).subtract(discountTotal);
@@ -317,13 +320,13 @@ public class OrderService {
                 .map(OrderItem::getId)
                 .toList();
         List<OrderItemModifier> allModifiers = orderItemModifierRepository.findByOrderItemIdIn(itemIds);
-        Map<Long,List<OrderItemModifier>> modifiersByItemId = allModifiers.stream()
-                .collect(Collectors.groupingBy(modifier-> modifier.getOrderItem().getId()));
+        Map<Long, List<OrderItemModifier>> modifiersByItemId = allModifiers.stream()
+                .collect(Collectors.groupingBy(modifier -> modifier.getOrderItem().getId()));
         return orders.stream()
                 .map(order -> {
                     List<OrderItem> items = itemsByOrderId.getOrDefault(order.getId(), List.of());
                     List<OrderItemDto> itemDtos = items.stream()
-                            .map(item-> {
+                            .map(item -> {
                                 List<OrderItemModifier> modifierEntities = modifiersByItemId.getOrDefault(item.getId(), List.of());
                                 List<OrderItemModifierDto> modifierDtos = modifierEntities.stream()
                                         .map(OrderItemModifierDto::from)

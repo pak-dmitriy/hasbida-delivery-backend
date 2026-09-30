@@ -1,6 +1,7 @@
 package com.delivery.habsida.dto;
 
 import com.delivery.habsida.entity.OrderType;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
@@ -20,6 +21,7 @@ public record OrderCreateRequest(
         @NotNull(message = "Customer address ID can not be empty")
         Long customerAddressId,
 
+        @Valid
         @NotEmpty(message = "Order items can not be empty")
         List<OrderItemRequest> items
 ) {

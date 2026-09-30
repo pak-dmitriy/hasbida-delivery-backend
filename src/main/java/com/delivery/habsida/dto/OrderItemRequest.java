@@ -14,6 +14,6 @@ public record OrderItemRequest(
         @Positive(message = "Quantity must be greater than zero")
         Integer quantity,
 
-        List<Long> modifierOptionIds
+        List<@NotNull Long> modifierOptionIds
 ) {
 }
