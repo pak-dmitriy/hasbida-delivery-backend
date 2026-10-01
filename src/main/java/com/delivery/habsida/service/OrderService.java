@@ -137,6 +137,7 @@ public class OrderService {
 
             item.setOrder(order);
             orderItemRepository.save(item);
+
             BigDecimal modifiersTotal = BigDecimal.ZERO;
 
             Map<Long, Integer> selectCount = new HashMap<>();
@@ -161,196 +162,198 @@ public class OrderService {
                     orderItemModifierRepository.save(orderItemModifier);
                 }
 
-                for (ProductModifierGroup productModifierGroup : productModifierGroupRepository.findByProductId(product.getId())) {
-                    ModifierGroup group = productModifierGroup.getModifierGroup();
-                    int selected = selectCount.getOrDefault(group.getId(), 0);
-                    if (selected < group.getMinSelect()) {
-                        throw new InvalidModifierSelectionException("Select at least " + group.getMinSelect() + " option(s) from group: " + group.getName());
-                    }
-                    if (selected > group.getMaxSelect()) {
-                        throw new InvalidModifierSelectionException("Select at max " + group.getMaxSelect() + " option(s) from group: " + group.getName());
-                    }
-                    if (group.isRequired() && selected == 0) {
-                        throw new InvalidModifierSelectionException("You must select at least 1 option" + " from group: " + group.getName());
-                    }
+            }
+
+            for (ProductModifierGroup productModifierGroup : productModifierGroupRepository.findByProductId(product.getId())) {
+                ModifierGroup group = productModifierGroup.getModifierGroup();
+                int selected = selectCount.getOrDefault(group.getId(), 0);
+                if (selected < group.getMinSelect()) {
+                    throw new InvalidModifierSelectionException("Select at least " + group.getMinSelect() + " option(s) from group: " + group.getName());
                 }
-                BigDecimal subtotal = product.getPrice().add(modifiersTotal).multiply(BigDecimal.valueOf(item.getQuantity()));
-                item.setSubtotal(subtotal);
-                orderItemRepository.save(item);
+                if (selected > group.getMaxSelect()) {
+                    throw new InvalidModifierSelectionException("Select at max " + group.getMaxSelect() + " option(s) from group: " + group.getName());
+                }
+                if (group.isRequired() && selected == 0) {
+                    throw new InvalidModifierSelectionException("You must select at least 1 option" + " from group: " + group.getName());
+                }
             }
-
-            BigDecimal finalOrderSubtotal = BigDecimal.ZERO;
-            for (OrderItem item : orderItems) {
-                finalOrderSubtotal = finalOrderSubtotal.add(item.getSubtotal());
-            }
-            BigDecimal finalTotal = finalOrderSubtotal.add(deliveryFee).subtract(discountTotal);
-            order.setSubTotal(finalOrderSubtotal);
-            order.setTotal(finalTotal);
-            orderRepository.save(order);
-
-            List<OrderItemDto> itemDtos = orderItems.stream()
-                    .map(item -> {
-                        List<OrderItemModifier> modifiersEntities = orderItemModifierRepository.findByOrderItemId(item.getId());
-                        List<OrderItemModifierDto> modifierDtos = modifiersEntities.stream()
-                                .map(OrderItemModifierDto::from)
-                                .toList();
-                        return OrderItemDto.from(item, modifierDtos);
-                    }).toList();
-            return OrderDTO.from(order, itemDtos);
+            BigDecimal subtotal = product.getPrice().add(modifiersTotal).multiply(BigDecimal.valueOf(item.getQuantity()));
+            item.setSubtotal(subtotal);
+            orderItemRepository.save(item);
+        }
+        BigDecimal finalOrderSubtotal = BigDecimal.ZERO;
+        for (OrderItem item : orderItems) {
+            finalOrderSubtotal = finalOrderSubtotal.add(item.getSubtotal());
         }
 
-        @Transactional
-        public OrderDTO acceptOrder (Long storeId, Long orderId){
-            Order order = orderRepository.findById(orderId)
-                    .orElseThrow(() -> new OrderNotFoundException("Order not found"));
-            if (!order.getStore().getId().equals(storeId)) {
-                throw new OrderNotFoundException("Order not found");
-            }
-            if (!OrderStatus.canTransition(order.getOrderStatus(), OrderStatus.ACCEPTED)) {
-                throw new InvalidOrderStatusTransitionException("Cannot transition from " + order.getOrderStatus() + " to ACCEPTED");
-            }
-            order.setOrderStatus(ACCEPTED);
-            order.setAcceptedAt(LocalDateTime.now());
-            orderRepository.save(order);
+        BigDecimal finalTotal = finalOrderSubtotal.add(deliveryFee).subtract(discountTotal);
+        order.setSubTotal(finalOrderSubtotal);
+        order.setTotal(finalTotal);
+        orderRepository.save(order);
 
-            List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
-            List<OrderItemDto> itemDtos = items.stream()
-                    .map(item -> {
-                        List<OrderItemModifier> modifierEntities = orderItemModifierRepository.findByOrderItemId(item.getId());
-                        List<OrderItemModifierDto> modifierDtos = modifierEntities.stream()
-                                .map(OrderItemModifierDto::from).toList();
-                        return OrderItemDto.from(item, modifierDtos);
-                    }).toList();
-            return OrderDTO.from(order, itemDtos);
-        }
-
-        @Transactional
-        public OrderDTO rejectOrder (Long storeId, Long orderId, String reason){
-            Order order = orderRepository.findById(orderId)
-                    .orElseThrow(() -> new OrderNotFoundException("Order not found"));
-            if (!order.getStore().getId().equals(storeId)) {
-                throw new OrderNotFoundException("Order not found");
-            }
-            if (!OrderStatus.canTransition(order.getOrderStatus(), OrderStatus.REJECTED)) {
-                throw new InvalidOrderStatusTransitionException("Cannot transition from " + order.getOrderStatus() + " to REJECTED");
-            }
-            order.setOrderStatus(REJECTED);
-            order.setRejectedAt(LocalDateTime.now());
-            order.setRejectReason(reason);
-            orderRepository.save(order);
-
-            List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
-            List<OrderItemDto> itemDtos = items.stream()
-                    .map(item -> {
-                        List<OrderItemModifier> modifierEntities = orderItemModifierRepository.findByOrderItemId(item.getId());
-                        List<OrderItemModifierDto> modifierDtos = modifierEntities.stream()
-                                .map(OrderItemModifierDto::from).toList();
-                        return OrderItemDto.from(item, modifierDtos);
-                    }).toList();
-            return OrderDTO.from(order, itemDtos);
-        }
-
-        @Transactional
-        public OrderDTO cancelOrder (Long storeId, Long orderId){
-            Order order = orderRepository.findById(orderId)
-                    .orElseThrow(() -> new OrderNotFoundException("Order not found"));
-            if (!order.getStore().getId().equals(storeId)) {
-                throw new OrderNotFoundException("Order not found");
-            }
-            if (!OrderStatus.canTransition(order.getOrderStatus(), OrderStatus.CANCELLED)) {
-                throw new InvalidOrderStatusTransitionException("Cannot transition from " + order.getOrderStatus() + " to CANCELLED");
-            }
-            order.setOrderStatus(CANCELLED);
-            order.setCancelledAt(LocalDateTime.now());
-            orderRepository.save(order);
-
-            List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
-            List<OrderItemDto> itemDtos = items.stream()
-                    .map(item -> {
-                        List<OrderItemModifier> modifierEntities = orderItemModifierRepository.findByOrderItemId(item.getId());
-                        List<OrderItemModifierDto> modifierDtos = modifierEntities.stream()
-                                .map(OrderItemModifierDto::from).toList();
-                        return OrderItemDto.from(item, modifierDtos);
-                    }).toList();
-            return OrderDTO.from(order, itemDtos);
-        }
-
-        @Transactional
-        public OrderDTO startOrder (Long storeId, Long orderId){
-            Order order = orderRepository.findById(orderId)
-                    .orElseThrow(() -> new OrderNotFoundException("Order not found"));
-            if (!order.getStore().getId().equals(storeId)) {
-                throw new OrderNotFoundException("Order not found");
-            }
-            if (!OrderStatus.canTransition(order.getOrderStatus(), OrderStatus.IN_PROGRESS)) {
-                throw new InvalidOrderStatusTransitionException("Cannot transition from " + order.getOrderStatus() + " to IN_PROGRESS");
-            }
-            order.setOrderStatus(IN_PROGRESS);
-            orderRepository.save(order);
-
-            List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
-            List<OrderItemDto> itemDtos = items.stream()
-                    .map(item -> {
-                        List<OrderItemModifier> modifierEntities = orderItemModifierRepository.findByOrderItemId(item.getId());
-                        List<OrderItemModifierDto> modifierDtos = modifierEntities.stream()
-                                .map(OrderItemModifierDto::from).toList();
-                        return OrderItemDto.from(item, modifierDtos);
-                    }).toList();
-            return OrderDTO.from(order, itemDtos);
-        }
-
-        @Transactional
-        public OrderDTO completeOrder (Long storeId, Long orderId){
-            Order order = orderRepository.findById(orderId)
-                    .orElseThrow(() -> new OrderNotFoundException("Order not found"));
-            if (!order.getStore().getId().equals(storeId)) {
-                throw new OrderNotFoundException("Order not found");
-            }
-            if (!OrderStatus.canTransition(order.getOrderStatus(), OrderStatus.COMPLETED)) {
-                throw new InvalidOrderStatusTransitionException("Cannot transition from " + order.getOrderStatus() + " to COMPLETED");
-            }
-            order.setOrderStatus(COMPLETED);
-            orderRepository.save(order);
-
-            List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
-            List<OrderItemDto> itemDtos = items.stream()
-                    .map(item -> {
-                        List<OrderItemModifier> modifierEntities = orderItemModifierRepository.findByOrderItemId(item.getId());
-                        List<OrderItemModifierDto> modifierDtos = modifierEntities.stream()
-                                .map(OrderItemModifierDto::from).toList();
-                        return OrderItemDto.from(item, modifierDtos);
-                    }).toList();
-            return OrderDTO.from(order, itemDtos);
-        }
-
-        @Transactional
-        public List<OrderDTO> getNewOrders (Long storeId){
-            List<Order> orders = orderRepository.findByStoreIdAndOrderStatus(storeId, CREATED);
-            List<Long> orderIds = orders.stream()
-                    .map(Order::getId)
-                    .toList();
-            List<OrderItem> allItems = orderItemRepository.findByOrderIdIn(orderIds);
-            Map<Long, List<OrderItem>> itemsByOrderId = allItems.stream()
-                    .collect(Collectors.groupingBy(item -> item.getOrder().getId()));
-            List<Long> itemIds = allItems.stream()
-                    .map(OrderItem::getId)
-                    .toList();
-            List<OrderItemModifier> allModifiers = orderItemModifierRepository.findByOrderItemIdIn(itemIds);
-            Map<Long, List<OrderItemModifier>> modifiersByItemId = allModifiers.stream()
-                    .collect(Collectors.groupingBy(modifier -> modifier.getOrderItem().getId()));
-            return orders.stream()
-                    .map(order -> {
-                        List<OrderItem> items = itemsByOrderId.getOrDefault(order.getId(), List.of());
-                        List<OrderItemDto> itemDtos = items.stream()
-                                .map(item -> {
-                                    List<OrderItemModifier> modifierEntities = modifiersByItemId.getOrDefault(item.getId(), List.of());
-                                    List<OrderItemModifierDto> modifierDtos = modifierEntities.stream()
-                                            .map(OrderItemModifierDto::from)
-                                            .toList();
-                                    return OrderItemDto.from(item, modifierDtos);
-                                }).toList();
-                        return OrderDTO.from(order, itemDtos);
-                    })
-                    .toList();
-        }
+        List<OrderItemDto> itemDtos = orderItems.stream()
+                .map(item -> {
+                    List<OrderItemModifier> modifiersEntities = orderItemModifierRepository.findByOrderItemId(item.getId());
+                    List<OrderItemModifierDto> modifierDtos = modifiersEntities.stream()
+                            .map(OrderItemModifierDto::from)
+                            .toList();
+                    return OrderItemDto.from(item, modifierDtos);
+                }).toList();
+        return OrderDTO.from(order, itemDtos);
     }
+
+    @Transactional
+    public OrderDTO acceptOrder(Long storeId, Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found"));
+        if (!order.getStore().getId().equals(storeId)) {
+            throw new OrderNotFoundException("Order not found");
+        }
+        if (!OrderStatus.canTransition(order.getOrderStatus(), OrderStatus.ACCEPTED)) {
+            throw new InvalidOrderStatusTransitionException("Cannot transition from " + order.getOrderStatus() + " to ACCEPTED");
+        }
+        order.setOrderStatus(ACCEPTED);
+        order.setAcceptedAt(LocalDateTime.now());
+        orderRepository.save(order);
+
+        List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
+        List<OrderItemDto> itemDtos = items.stream()
+                .map(item -> {
+                    List<OrderItemModifier> modifierEntities = orderItemModifierRepository.findByOrderItemId(item.getId());
+                    List<OrderItemModifierDto> modifierDtos = modifierEntities.stream()
+                            .map(OrderItemModifierDto::from).toList();
+                    return OrderItemDto.from(item, modifierDtos);
+                }).toList();
+        return OrderDTO.from(order, itemDtos);
+    }
+
+    @Transactional
+    public OrderDTO rejectOrder(Long storeId, Long orderId, String reason) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found"));
+        if (!order.getStore().getId().equals(storeId)) {
+            throw new OrderNotFoundException("Order not found");
+        }
+        if (!OrderStatus.canTransition(order.getOrderStatus(), OrderStatus.REJECTED)) {
+            throw new InvalidOrderStatusTransitionException("Cannot transition from " + order.getOrderStatus() + " to REJECTED");
+        }
+        order.setOrderStatus(REJECTED);
+        order.setRejectedAt(LocalDateTime.now());
+        order.setRejectReason(reason);
+        orderRepository.save(order);
+
+        List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
+        List<OrderItemDto> itemDtos = items.stream()
+                .map(item -> {
+                    List<OrderItemModifier> modifierEntities = orderItemModifierRepository.findByOrderItemId(item.getId());
+                    List<OrderItemModifierDto> modifierDtos = modifierEntities.stream()
+                            .map(OrderItemModifierDto::from).toList();
+                    return OrderItemDto.from(item, modifierDtos);
+                }).toList();
+        return OrderDTO.from(order, itemDtos);
+    }
+
+    @Transactional
+    public OrderDTO cancelOrder(Long storeId, Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found"));
+        if (!order.getStore().getId().equals(storeId)) {
+            throw new OrderNotFoundException("Order not found");
+        }
+        if (!OrderStatus.canTransition(order.getOrderStatus(), OrderStatus.CANCELLED)) {
+            throw new InvalidOrderStatusTransitionException("Cannot transition from " + order.getOrderStatus() + " to CANCELLED");
+        }
+        order.setOrderStatus(CANCELLED);
+        order.setCancelledAt(LocalDateTime.now());
+        orderRepository.save(order);
+
+        List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
+        List<OrderItemDto> itemDtos = items.stream()
+                .map(item -> {
+                    List<OrderItemModifier> modifierEntities = orderItemModifierRepository.findByOrderItemId(item.getId());
+                    List<OrderItemModifierDto> modifierDtos = modifierEntities.stream()
+                            .map(OrderItemModifierDto::from).toList();
+                    return OrderItemDto.from(item, modifierDtos);
+                }).toList();
+        return OrderDTO.from(order, itemDtos);
+    }
+
+    @Transactional
+    public OrderDTO startOrder(Long storeId, Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found"));
+        if (!order.getStore().getId().equals(storeId)) {
+            throw new OrderNotFoundException("Order not found");
+        }
+        if (!OrderStatus.canTransition(order.getOrderStatus(), OrderStatus.IN_PROGRESS)) {
+            throw new InvalidOrderStatusTransitionException("Cannot transition from " + order.getOrderStatus() + " to IN_PROGRESS");
+        }
+        order.setOrderStatus(IN_PROGRESS);
+        orderRepository.save(order);
+
+        List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
+        List<OrderItemDto> itemDtos = items.stream()
+                .map(item -> {
+                    List<OrderItemModifier> modifierEntities = orderItemModifierRepository.findByOrderItemId(item.getId());
+                    List<OrderItemModifierDto> modifierDtos = modifierEntities.stream()
+                            .map(OrderItemModifierDto::from).toList();
+                    return OrderItemDto.from(item, modifierDtos);
+                }).toList();
+        return OrderDTO.from(order, itemDtos);
+    }
+
+    @Transactional
+    public OrderDTO completeOrder(Long storeId, Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found"));
+        if (!order.getStore().getId().equals(storeId)) {
+            throw new OrderNotFoundException("Order not found");
+        }
+        if (!OrderStatus.canTransition(order.getOrderStatus(), OrderStatus.COMPLETED)) {
+            throw new InvalidOrderStatusTransitionException("Cannot transition from " + order.getOrderStatus() + " to COMPLETED");
+        }
+        order.setOrderStatus(COMPLETED);
+        orderRepository.save(order);
+
+        List<OrderItem> items = orderItemRepository.findByOrderId(order.getId());
+        List<OrderItemDto> itemDtos = items.stream()
+                .map(item -> {
+                    List<OrderItemModifier> modifierEntities = orderItemModifierRepository.findByOrderItemId(item.getId());
+                    List<OrderItemModifierDto> modifierDtos = modifierEntities.stream()
+                            .map(OrderItemModifierDto::from).toList();
+                    return OrderItemDto.from(item, modifierDtos);
+                }).toList();
+        return OrderDTO.from(order, itemDtos);
+    }
+
+    @Transactional
+    public List<OrderDTO> getNewOrders(Long storeId) {
+        List<Order> orders = orderRepository.findByStoreIdAndOrderStatus(storeId, CREATED);
+        List<Long> orderIds = orders.stream()
+                .map(Order::getId)
+                .toList();
+        List<OrderItem> allItems = orderItemRepository.findByOrderIdIn(orderIds);
+        Map<Long, List<OrderItem>> itemsByOrderId = allItems.stream()
+                .collect(Collectors.groupingBy(item -> item.getOrder().getId()));
+        List<Long> itemIds = allItems.stream()
+                .map(OrderItem::getId)
+                .toList();
+        List<OrderItemModifier> allModifiers = orderItemModifierRepository.findByOrderItemIdIn(itemIds);
+        Map<Long, List<OrderItemModifier>> modifiersByItemId = allModifiers.stream()
+                .collect(Collectors.groupingBy(modifier -> modifier.getOrderItem().getId()));
+        return orders.stream()
+                .map(order -> {
+                    List<OrderItem> items = itemsByOrderId.getOrDefault(order.getId(), List.of());
+                    List<OrderItemDto> itemDtos = items.stream()
+                            .map(item -> {
+                                List<OrderItemModifier> modifierEntities = modifiersByItemId.getOrDefault(item.getId(), List.of());
+                                List<OrderItemModifierDto> modifierDtos = modifierEntities.stream()
+                                        .map(OrderItemModifierDto::from)
+                                        .toList();
+                                return OrderItemDto.from(item, modifierDtos);
+                            }).toList();
+                    return OrderDTO.from(order, itemDtos);
+                })
+                .toList();
+    }
+}
