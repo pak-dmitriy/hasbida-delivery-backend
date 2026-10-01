@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public record OrderItemRequest(
         @NotNull(message = "ProductId can not be empty")
@@ -11,6 +12,8 @@ public record OrderItemRequest(
 
         @NotNull
         @Positive(message = "Quantity must be greater than zero")
-        Integer quantity
+        Integer quantity,
+
+        List<@NotNull Long> modifierOptionIds
 ) {
 }
