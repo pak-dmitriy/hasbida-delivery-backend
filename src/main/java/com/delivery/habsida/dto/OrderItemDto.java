@@ -3,6 +3,7 @@ package com.delivery.habsida.dto;
 import com.delivery.habsida.entity.OrderItem;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public record OrderItemDto(
         Long id,
@@ -12,10 +13,11 @@ public record OrderItemDto(
         Integer quantity,
         BigDecimal subtotal,
         Integer discountPercent,
-        BigDecimal discountAmount
+        BigDecimal discountAmount,
+        List<OrderItemModifierDto> orderItemModifiers
         ) {
 
-    public static OrderItemDto from(OrderItem orderItem) {
+    public static OrderItemDto from(OrderItem orderItem, List<OrderItemModifierDto> orderItemModifiers) {
         return new OrderItemDto(
                 orderItem.getId(),
                 orderItem.getOrder().getId(),
@@ -24,7 +26,8 @@ public record OrderItemDto(
                 orderItem.getQuantity(),
                 orderItem.getSubtotal(),
                 orderItem.getDiscountPercent(),
-                orderItem.getDiscountAmount()
+                orderItem.getDiscountAmount(),
+                orderItemModifiers
         );
     }
 }

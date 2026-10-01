@@ -302,5 +302,15 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(InvalidModifierSelectionException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handlerInvalidModifierSelectionException(InvalidModifierSelectionException ex, HttpServletRequest request) {
+        return new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                List.of(ex.getMessage()),
+                LocalDateTime.now(),
+                request.getRequestURI()
+        );
+    }
 }
 
