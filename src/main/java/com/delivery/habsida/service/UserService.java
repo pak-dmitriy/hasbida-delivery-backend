@@ -2,10 +2,12 @@ package com.delivery.habsida.service;
 
 import com.delivery.habsida.dto.MeResponse;
 import com.delivery.habsida.dto.MeStoreDto;
-import com.delivery.habsida.entity.UserStoreAccess;
+import com.delivery.habsida.entity.User;
+import com.delivery.habsida.exception.UserNotFoundException;
+import com.delivery.habsida.repository.UserRepository;
+import com.delivery.habsida.repository.UserRoleRepository;
 import com.delivery.habsida.repository.UserStoreAccessRepository;
-import com.delivery.habsida.security.UserPrincipal;
-import org.springframework.security.core.Authentication;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,25 +16,29 @@ import java.util.List;
 public class UserService {
 
     private final UserStoreAccessRepository userStoreAccessRepository;
+    private final UserRepository userRepository;
+    private final UserRoleRepository userRoleRepository;
 
-    public UserService(UserStoreAccessRepository userStoreAccessRepository) {
+    public UserService(UserStoreAccessRepository userStoreAccessRepository,
+                       UserRepository userRepository,
+                       UserRoleRepository userRoleRepository) {
         this.userStoreAccessRepository = userStoreAccessRepository;
+        this.userRepository = userRepository;
+        this.userRoleRepository = userRoleRepository;
     }
 
-    public MeResponse getMe(Authentication authentication) {
-        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+    public MeResponse getMe(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        List<String> roles = authentication.getAuthorities().stream()
-                .map(a -> a.getAuthority())
-                .map(role -> role.replace("ROLE_", ""))
+        List<String> roles = userRoleRepository.findByUser(user).stream()
+                .map(a -> a.getRole().getName())
                 .toList();
 
-        List<UserStoreAccess> accesses = userStoreAccessRepository.findByUserId(userPrincipal.userId());
+        List<MeStoreDto> stores = userStoreAccessRepository.findByUserId(userId).stream()
+                .map(a -> MeStoreDto.from(a.getStore()))
+                .toList();
 
-        MeStoreDto store = null;
-        if (!accesses.isEmpty()) {
-            store = MeStoreDto.from(accesses.get(0).getStore());
-        }
-        return new MeResponse(userPrincipal.userId(), userPrincipal.email(),  roles, store);
+        return new MeResponse(user.getId(), user.getEmail(), roles, stores);
     }
 }

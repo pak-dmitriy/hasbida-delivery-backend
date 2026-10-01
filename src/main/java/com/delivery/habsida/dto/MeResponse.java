@@ -6,6 +6,6 @@ public record MeResponse(
         Long id,
         String email,
         List<String> roles,
-        MeStoreDto store
+        List<MeStoreDto> stores
 ) {
 }
